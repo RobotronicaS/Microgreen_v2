@@ -1,0 +1,8 @@
+{% if importador %}
+<div class="registro">
+  <span>Revisión {{ importador.terminado_en|fecha_local }}</span>
+  <span>{{ importador.nuevas }} JPG incorporados en esa revisión</span>
+  <span>{{ importador.rechazadas }} rechazos registrados</span>
+  {% if importador.errores %}<span class="aviso">{{ importador.detalle }}</span>{% endif %}
+</div>
+{% else %}<p class="muted">Primera revisión pendiente.</p>{% endif %}

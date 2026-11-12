@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / Lotes</p>
+<div class="titulo"><h1>Lotes</h1>
+  {% if usuario.rol == 'tecnico' %}<a class="boton primario" href="/viveros/{{ sitio.id }}/lotes/nuevo">Nuevo lote</a>{% endif %}</div>
+<div class="grilla-sitios">{% for l in lotes %}
+<article class="panel"><h2><a href="/lotes/{{ l.id }}">{{ l.nombre }}</a></h2>
+<p>{{ l.especie }} {{ l.variedad }} · {{ l.camara }}</p>
+<dl class="ficha"><dt>Siembra</dt><dd>{{ l.siembra.strftime('%d/%m/%Y') }}</dd><dt>Cosecha</dt><dd>{{ l.cosecha.strftime('%d/%m/%Y') if l.cosecha else 'En curso' }}</dd></dl>
+<a class="boton" href="/lotes/{{ l.id }}">Ver seguimiento</a></article>
+{% else %}<p class="panel muted">Todavía no hay lotes en este invernáculo.</p>{% endfor %}</div>
+{% endblock %}

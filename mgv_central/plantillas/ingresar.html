@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block clase_main %}ingreso{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <h1>Ingresar a Central</h1>
+  {% if fallo %}<p class="aviso" role="alert">Revisá el usuario y la contraseña.</p>{% endif %}
+  <form class="form-col" method="post" action="/ingresar">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Usuario <input name="usuario" autocomplete="username" required maxlength="40" autofocus></label>
+    <label>Contraseña <input type="password" name="clave" autocomplete="current-password" required maxlength="128"></label>
+    <button class="boton primario" type="submit">Ingresar</button>
+  </form>
+</section>
+{% endblock %}

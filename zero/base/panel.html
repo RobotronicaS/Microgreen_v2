@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MicroGreenVision Zero v2</title>
+  <link rel="stylesheet" href="/panel.css">
+  <script src="/panel.js" defer></script>
+</head>
+<body>
+  <header class="cabecera">
+    <div class="contenedor cabecera-interior">
+      <div><span class="marca">MicroGreenVision</span><span class="equipo">Zero v2</span></div>
+      <span id="conexion" class="conexion" role="status">Conectando con la Zero</span>
+    </div>
+  </header>
+  <main class="contenedor">
+    <div class="titulo">
+      <h1>Cámaras del invernáculo</h1>
+      <div class="acciones">
+        <button id="buscar" type="button">Buscar en Wi-Fi</button>
+        <button id="registrar" type="button">Registrar cámara</button>
+        <button id="probar-todas" class="primario" type="button" disabled>Probar todas</button>
+      </div>
+    </div>
+
+    <dl class="resumen">
+      <div><dt>Registradas</dt><dd id="total">—</dd></div>
+      <div><dt>Última prueba OK</dt><dd id="correctas">—</dd></div>
+      <div><dt>JPG pendientes</dt><dd id="pendientes">—</dd></div>
+      <div><dt>Envío al servidor</dt><dd id="envio" class="envio">—</dd></div>
+    </dl>
+    <p id="progreso" class="aviso" aria-live="polite" hidden></p>
+    <p id="aviso" class="aviso" role="status" hidden></p>
+
+    <section id="busqueda" class="busqueda" aria-labelledby="titulo-busqueda" hidden>
+      <div class="linea"><h2 id="titulo-busqueda">Equipos ONVIF en el Wi-Fi</h2><button type="button" id="cerrar-busqueda">Cerrar</button></div>
+      <p id="detalle-busqueda"></p>
+      <ul id="resultados"></ul>
+    </section>
+    <div id="hileras"></div>
+  </main>
+
+  <template id="tarjeta">
+    <article class="camara">
+      <div class="imagen"><p class="sin-foto">Sin captura</p><img loading="lazy" decoding="async" alt="" hidden></div>
+      <div class="info">
+        <div class="linea"><h3 class="puesto"></h3><span class="estado"></span></div>
+        <p class="ubicacion"></p>
+        <p class="fecha"></p>
+        <p class="detalle" hidden></p>
+        <div class="acciones-camara"><button class="editar" type="button"></button><button class="probar" type="button">Probar</button></div>
+      </div>
+    </article>
+  </template>
+
+  <dialog id="registro" aria-labelledby="titulo-registro">
+    <form id="formulario">
+      <h2 id="titulo-registro">Registrar cámara</h2>
+      <div class="campos">
+        <label>Puesto<input name="id" list="puestos" required maxlength="32" placeholder="H1-C01"></label>
+        <label>Nombre (opcional)<input name="nombre" maxlength="80" placeholder="Entrada de la hilera"></label>
+      </div>
+      <datalist id="puestos"></datalist>
+      <label>Tipo de cámara
+        <select name="tipo"><option value="tapo">Tapo</option><option value="rtsp">Otra cámara RTSP</option></select>
+      </label>
+      <fieldset id="opciones-tapo">
+        <div class="campos">
+          <label>IP de la cámara<input name="ip" maxlength="15" placeholder="192.168.1.42" inputmode="decimal"></label>
+          <label>Perfil RTSP<select name="perfil"><option value="stream2">Estándar (stream2)</option><option value="stream1">Alta calidad (stream1)</option></select></label>
+        </div>
+        <p class="ayuda" id="ayuda-tapo">Usá la Cuenta de cámara de la app Tapo.</p>
+        <div class="campos">
+          <label>Usuario de cámara<input name="usuario" maxlength="128" autocapitalize="none" autocomplete="off" spellcheck="false"></label>
+          <label>Contraseña de cámara<input name="clave" type="password" maxlength="256" autocomplete="new-password"></label>
+        </div>
+      </fieldset>
+      <fieldset id="opciones-rtsp" hidden disabled>
+        <label>URL RTSP completa<input name="rtsp" type="password" maxlength="4096" autocomplete="new-password" placeholder="rtsp://usuario:clave@IP:554/ruta"></label>
+        <p class="ayuda" id="ayuda-rtsp">Usá la URL RTSP que indica el fabricante para ese modelo.</p>
+      </fieldset>
+      <p id="error-registro" class="error" role="alert" hidden></p>
+      <div class="acciones formulario-acciones">
+        <button id="cerrar-registro" type="button">Cancelar</button>
+        <button id="guardar" class="primario" type="submit">Guardar cámara</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

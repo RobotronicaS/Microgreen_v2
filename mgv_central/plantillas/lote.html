@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / <a href="/viveros/{{ sitio.id }}/lotes">Lotes</a> / {{ lote.nombre }}</p>
+<div class="titulo"><div><h1>{{ lote.nombre }}</h1><p>{{ lote.especie }} {{ lote.variedad }} · {{ lote.camara_id }}</p></div>
+  <div class="acciones solo-pantalla">
+    <a class="boton" href="/viveros/{{ sitio.id }}/camaras/{{ lote.camara_id }}?lote={{ lote.id }}">Ver fotos</a>
+    <a class="boton" href="/lotes/{{ lote.id }}/mediciones.csv">CSV</a>
+    <button type="button" class="boton" data-imprimir>Imprimir informe</button>
+    {% if usuario.rol == 'tecnico' %}<a class="boton primario" href="/lotes/{{ lote.id }}/editar">Editar lote</a>{% endif %}
+  </div>
+</div>
+<div class="dos-columnas">
+<section class="panel"><h2>Cultivo</h2>
+  <dl class="ficha">
+    <dt>Siembra</dt><dd>{{ lote.siembra.strftime('%d/%m/%Y') }}</dd>
+    <dt>Cosecha</dt><dd>{{ lote.cosecha.strftime('%d/%m/%Y') if lote.cosecha else 'En curso' }}</dd>
+    <dt>Bandejas</dt><dd>{{ lote.bandejas or '—' }}</dd>
+    <dt>Revisión de región</dt><dd>{{ lote.revision }}</dd>
+    {% if vence %}<dt>Retención prevista hasta</dt><dd>{{ vence.strftime('%d/%m/%Y') }}</dd>{% endif %}
+  </dl>
+  {% if usuario.rol == 'tecnico' %}<form class="solo-pantalla" method="post" action="/lotes/{{ lote.id }}/analizar">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton">Analizar fotos del lote</button></form>{% endif %}
+</section>
+<section class="panel"><h2>Última medición</h2>
+  {% if ultima %}<p><strong>{{ '%.1f'|format(ultima.cobertura) }} % de cobertura</strong> · {{ ultima.capturada_en|fecha_local(sitio.zona) }}</p>
+    <img class="foto-grande" src="/lotes/{{ lote.id }}/mascaras/{{ ultima.captura_id }}.png" alt="Región y cobertura vegetal detectada">
+    <p class="muted">Método {{ ultima.algoritmo }}{% if ultima.area_cm2 is not none %} · {{ '%.1f'|format(ultima.area_cm2) }} cm² proyectados{% endif %}</p>
+  {% else %}<p class="muted">En espera de fotos aptas dentro de las fechas del lote.</p>{% endif %}
+</section>
+</div>
+<section class="panel"><h2>Cobertura vegetal por día</h2>
+  {% if puntos %}
+  <canvas class="grafica" data-puntos="{{ puntos|tojson|forceescape }}" data-maximo="100" aria-label="Cobertura vegetal diaria en porcentaje"></canvas>
+  <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Cobertura media</th><th>Área proyectada</th><th>Fotos aptas</th></tr></thead><tbody>
+  {% for d in dias %}<tr><td>{{ d.dia.strftime('%d/%m/%Y') }}</td><td>{{ '%.1f'|format(d.cobertura) }} %</td>
+    <td>{{ ('%.1f'|format(d.area_cm2)) ~ ' cm²' if d.area_cm2 is not none else '—' }}</td><td>{{ d.muestras }}</td></tr>{% endfor %}
+  </tbody></table></div>
+  {% else %}<p class="muted">Aún no hay mediciones para esta región.</p>{% endif %}
+</section>
+<div class="dos-columnas">
+<section class="panel"><h2>Bitácora</h2>
+  {% if usuario.rol == 'tecnico' %}
+  <form method="post" action="/lotes/{{ lote.id }}/notas" class="form-col solo-pantalla">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Tipo <select name="tipo"><option value="observacion">Observación</option><option value="riego">Riego</option><option value="luz">Luz</option><option value="cosecha">Cosecha</option></select></label>
+    <label>Nota <textarea name="texto" rows="3" maxlength="1200" required></textarea></label><button class="boton">Registrar nota</button>
+  </form>{% endif %}
+  <ul class="lista">{% for n in notas %}<li><div><strong>{{ n.tipo|capitalize }}</strong><p>{{ n.texto }}</p>
+    <small class="muted">{{ n.nombre }} · {{ n.fecha|fecha_local(sitio.zona) }}</small></div></li>
+    {% else %}<li class="muted">Sin notas registradas.</li>{% endfor %}</ul>
+</section>
+<section class="panel"><h2>Sensores durante el lote</h2>
+  {% if sensores.muestras %}<dl class="ficha">
+    {% for campo, nombre in series.items() %}<dt>{{ nombre }}</dt><dd>{{ '%.1f'|format(sensores[campo]) if sensores[campo] is not none else '—' }}</dd>{% endfor %}
+    <dt>Lecturas</dt><dd>{{ sensores.muestras }}</dd></dl>
+  {% else %}<p class="muted">Sin lecturas en las fechas del lote.</p>{% endif %}
+  <a class="boton solo-pantalla" href="/viveros/{{ sitio.id }}/sensores">Ver series del invernáculo</a>
+</section>
+</div>
+{% endblock %}

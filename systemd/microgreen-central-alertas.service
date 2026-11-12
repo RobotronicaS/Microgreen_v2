@@ -1,0 +1,11 @@
+[Unit]
+Description=MicroGreenVision Central · alertas
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/MicroGreenVision_Central
+ExecStart=/usr/bin/python3 -m mgv_central alertas
+Nice=4
+TimeoutStartSec=2min
+UMask=0077
+NoNewPrivileges=true

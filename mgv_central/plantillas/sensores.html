@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / Sensores</p>
+<h1>Sensores de {{ sitio.nombre }}</h1>
+<section class="panel"><form class="form-linea" method="get">
+  <label>Desde <input type="date" name="desde" value="{{ desde }}" required></label>
+  <label>Hasta <input type="date" name="hasta" value="{{ hasta }}" required></label>
+  <button class="boton primario">Ver series</button>
+</form></section>
+<div class="dos-columnas">
+{% for nombre, puntos in series.items() %}<section class="panel"><h2>{{ nombre }}</h2>
+  {% if puntos %}<canvas class="grafica" data-puntos="{{ puntos|tojson|forceescape }}" aria-label="{{ nombre }} por hora"></canvas>
+    <p class="muted">{{ puntos|length }} promedios horarios · Último valor {{ puntos[-1][1] }}</p>
+  {% else %}<p class="muted">Sin lecturas para estas fechas.</p>{% endif %}</section>{% endfor %}
+</div>
+{% if usuario.rol == 'tecnico' %}
+<section class="panel"><details><summary>Importar lecturas CSV</summary>
+  <p class="muted">Usá fecha ISO con zona horaria y encabezados <code>fecha,temp_c,humedad_pct,lux,co2_ppm</code>.</p>
+  <form method="post" class="form-col"><input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+  <label>Contenido del CSV <textarea name="csv" rows="6" spellcheck="false" required></textarea></label>
+  <button class="boton primario">Importar lecturas</button></form>
+</details></section>{% endif %}
+{% endblock %}

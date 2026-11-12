@@ -1,0 +1,10 @@
+[Unit]
+Description=MicroGreenVision Zero · capturar para Central
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/MicroGreenVision_Zero
+ExecStart=/usr/bin/python3 %h/MicroGreenVision_Zero/agente_central.py capturar
+TimeoutStartSec=12min
+UMask=0077
+NoNewPrivileges=true

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="titulo"><h1>Alertas</h1>
+  <a class="boton" href="{{ '/alertas' if cerradas else '/alertas?cerradas=true' }}">{{ 'Ver abiertas' if cerradas else 'Incluir cerradas' }}</a>
+</div>
+<section class="panel"><ul class="lista">
+  {% for a in alertas %}
+  <li>
+    <div><span class="estado {{ 'pausada' if a.cerrada_en else 'alerta' }}">{{ 'Cerrada' if a.cerrada_en else a.nivel|capitalize }}</span>
+      <p>{{ a.detalle }}</p>
+      <small class="muted">{{ a.abierta_en|fecha_local }}{% if a.cerrada_en %} · Cerrada {{ a.cerrada_en|fecha_local }}{% endif %}
+      {% if a.revisora %} · Revisada por {{ a.revisora }}{% endif %}</small></div>
+    {% if a.puede_marcar and not a.revisora and not a.cerrada_en %}
+    <form method="post" action="/alertas/{{ a.id }}/leer"><input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton">Marcar revisada</button></form>
+    {% endif %}
+  </li>
+  {% else %}<li class="muted">Sin alertas en esta vista.</li>{% endfor %}
+</ul></section>
+{% endblock %}

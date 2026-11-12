@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ sitio.id }}/camaras/{{ camara.id }}">Historial de {{ camara.nombre }}</a> / Comparar</p>
+<h1>Comparar capturas</h1>
+<section class="panel">
+  <div class="fila comparacion-fechas"><a href="/fotos/{{ anterior.id }}.jpg">{{ anterior.capturada_en|fecha_local(sitio.zona) }}</a>
+    <a href="/fotos/{{ posterior.id }}.jpg">{{ posterior.capturada_en|fecha_local(sitio.zona) }}</a></div>
+  <div class="comparador" data-comparador>
+    <img src="/fotos/{{ anterior.id }}.jpg" alt="Captura anterior">
+    <img class="deslizar" src="/fotos/{{ posterior.id }}.jpg" alt="Captura posterior">
+  </div>
+  <label class="control-comparar">Deslizador de comparación <input type="range" min="0" max="100" value="50" data-deslizador></label>
+</section>
+<div class="dos-columnas">
+  <figure class="panel"><img class="foto-grande" src="/fotos/{{ anterior.id }}.jpg" alt="Captura anterior"><figcaption>{{ anterior.capturada_en|fecha_local(sitio.zona) }}</figcaption></figure>
+  <figure class="panel"><img class="foto-grande" src="/fotos/{{ posterior.id }}.jpg" alt="Captura posterior"><figcaption>{{ posterior.capturada_en|fecha_local(sitio.zona) }}</figcaption></figure>
+</div>
+{% endblock %}

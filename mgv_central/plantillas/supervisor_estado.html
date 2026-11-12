@@ -1,0 +1,122 @@
+{% set niveles = {'ok': 'En orden', 'aviso': 'Atención', 'critico': 'Crítico', 'sin_datos': 'Sin datos'} %}
+{% macro estado_nivel(nivel, texto='') %}
+  <span class="estado supervisor-estado" data-nivel="{{ nivel }}">{{ texto or niveles[nivel] }}</span>
+{% endmacro %}
+{% macro lista_incidencias(incidencias) %}
+  <ul class="lista supervisor-incidencias">
+  {% for i in incidencias %}
+    <li>
+      {{ estado_nivel(i.nivel) }}
+      <div><a class="enlace" href="{{ i.enlace }}">{{ i.origen }}</a><p>{{ i.mensaje }}</p></div>
+    </li>
+  {% endfor %}
+  </ul>
+{% endmacro %}
+<div data-supervisor-datos>
+  <section class="panel supervisor-general" data-nivel="{{ estado.nivel }}">
+    <div>
+      <h2>{{ estado.general }}</h2>
+      {% if estado.incidencias %}
+        <p>{{ estado.criticas }} {{ 'crítica' if estado.criticas == 1 else 'críticas' }} · {{ estado.avisos }} {{ 'aviso' if estado.avisos == 1 else 'avisos' }}</p>
+      {% endif %}
+    </div>
+    <div class="supervisor-lectura">
+      <span>Última lectura</span>
+      <time datetime="{{ estado.ahora.isoformat() }}">{{ estado.ahora|fecha_local }}</time>
+    </div>
+  </section>
+
+  {% if estado.incidencias %}
+  <section class="panel">
+    <h2>Incidencias actuales</h2>
+    {{ lista_incidencias(estado.incidencias[:5]) }}
+    {% if estado.incidencias|length > 5 %}
+    <details data-supervisor-seccion="incidencias">
+      <summary>Ver {{ estado.incidencias|length - 5 }} más</summary>
+      {{ lista_incidencias(estado.incidencias[5:]) }}
+    </details>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% if estado.servidor %}
+  <section class="panel" id="servidor">
+    <h2>Servidor central</h2>
+    <dl class="supervisor-recursos">
+      {% for recurso in estado.servidor %}
+      <div>
+        <dt>{{ recurso.nombre }}</dt>
+        <dd class="supervisor-valor">{{ recurso.valor }}</dd>
+        <dd class="supervisor-detalle">{{ recurso.detalle }}</dd>
+        <dd>{{ estado_nivel(recurso.nivel) }}</dd>
+      </div>
+      {% endfor %}
+    </dl>
+  </section>
+  {% endif %}
+
+  <section class="panel">
+    <h2>Invernáculos y conexión</h2>
+    {% for sitio in estado.sitios %}
+    <details class="supervisor-sitio" data-supervisor-seccion="sitio-{{ sitio.id }}"{% if estado.sitios|length == 1 %} open{% endif %}>
+      <summary>
+        <span class="supervisor-sitio-nombre">{{ sitio.nombre }}</span>
+        <span class="supervisor-sitio-conteo">
+          {% if sitio.activas %}
+            {{ sitio.activas }} {{ 'activa' if sitio.activas == 1 else 'activas' }} · {{ sitio.aldia }} al día
+            {% if sitio.atrasadas %} · {{ sitio.atrasadas }} {{ 'atrasada' if sitio.atrasadas == 1 else 'atrasadas' }}{% endif %}
+            {% if sitio.en_espera %} · {{ sitio.en_espera }} esperando JPG{% endif %}
+            {% if sitio.fuera_horario %} · {{ sitio.fuera_horario }} fuera de horario{% endif %}
+          {% else %}Sin cámaras activas{% endif %}
+        </span>
+        {{ estado_nivel(sitio.nivel) }}
+      </summary>
+      <div class="fila supervisor-sitio-detalle">
+        {% if sitio.camaras_atrasadas %}
+        <p><strong>Cámaras a revisar</strong> {% for c in sitio.camaras_atrasadas %}{{ c.id }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+        {% endif %}
+        <a class="enlace" href="/viveros/{{ sitio.id }}">Abrir invernáculo</a>
+      </div>
+      <div class="supervisor-nodos">
+      {% for n in sitio.nodos %}
+        <div class="supervisor-nodo">
+          <div class="fila"><h3>{{ n.nombre }}</h3>{{ estado_nivel(n.conexion.nivel, n.conexion.valor) }}</div>
+          <dl class="ficha">
+            <dt>Último reporte</dt><dd>{{ n.ultimo_reporte|fecha_local(sitio.zona) }}</dd>
+            <dt>Última captura</dt><dd>{{ n.ultimo_jpg|fecha_local(sitio.zona) }}</dd>
+            {% if n.cola is not none %}
+            <dt>JPG pendientes</dt><dd>{{ n.cola }}{% if n.edad_cola %} · {% if n.demora_cola %}{{ estado_nivel('aviso', n.edad_cola) }}{% else %}{{ n.edad_cola }}{% endif %}{% endif %}</dd>
+            {% endif %}
+            {% if n.libres is not none %}
+            <dt>Espacio en Zero</dt><dd>{% if n.estado_libre == 'ok' %}{{ n.libres|peso }}{% else %}{{ estado_nivel(n.estado_libre, n.libres|peso) }}{% endif %}</dd>
+            {% endif %}
+          </dl>
+          {% if not n.ultimo_reporte %}<p class="muted">{{ n.conexion.detalle }}</p>{% endif %}
+          {% if n.error_envio %}<p>{{ estado_nivel('aviso', 'Error de envío') }}</p>{% endif %}
+          {% if n.fallas %}<p><strong>Fallas informadas</strong> {{ n.fallas|join(', ') }}</p>{% endif %}
+        </div>
+      {% endfor %}
+      </div>
+    </details>
+    {% else %}
+    <p class="muted">Tu cuenta no tiene invernáculos asignados.</p>
+    {% endfor %}
+  </section>
+
+  {% if estado.colas %}
+  <section class="panel">
+    <div class="fila supervisor-procesamiento"><h2>Procesamiento</h2><a class="enlace" href="/trabajos">Ver trabajos</a></div>
+    <div class="tabla-wrap"><table class="supervisor-colas">
+      <thead><tr><th scope="col">Cola</th><th scope="col">Pendientes</th><th scope="col">Mayor espera</th><th scope="col">En curso</th><th scope="col">Errores</th><th scope="col">Estado</th></tr></thead>
+      <tbody>
+      {% for cola in estado.colas %}
+        <tr>
+          <th scope="row">{{ cola.nombre }}</th><td>{{ cola.pendientes }}</td><td>{{ cola.espera }}</td>
+          <td>{{ cola.en_curso }}</td><td>{{ cola.errores }}</td><td>{{ estado_nivel(cola.nivel) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table></div>
+  </section>
+  {% endif %}
+</div>

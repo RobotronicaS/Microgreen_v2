@@ -1,0 +1,10 @@
+[Unit]
+Description=MicroGreenVision Central · programar media
+
+[Timer]
+OnStartupSec=32s
+OnUnitInactiveSec=20s
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

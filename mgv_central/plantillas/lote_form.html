@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / <a href="/viveros/{{ sitio.id }}/lotes">Lotes</a></p>
+<h1>{{ 'Editar lote' if lote else 'Nuevo lote' }}</h1>
+<form method="post" action="{{ '/lotes/' ~ lote.id ~ '/editar' if lote else '/viveros/' ~ sitio.id ~ '/lotes' }}">
+<input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+<div class="dos-columnas">
+<section class="panel form-col">
+  <h2>Datos del cultivo</h2>
+  <label>Nombre <input name="nombre" maxlength="80" required value="{{ lote.nombre if lote else '' }}"></label>
+  <div class="campos"><label>Especie <input name="especie" maxlength="60" required value="{{ lote.especie if lote else '' }}"></label>
+  <label>Variedad <input name="variedad" maxlength="60" value="{{ lote.variedad if lote else '' }}"></label></div>
+  <label>Bandejas <input name="bandejas" maxlength="120" value="{{ lote.bandejas if lote else '' }}"></label>
+  <div class="campos"><label>Siembra <input type="date" name="siembra" required value="{{ lote.siembra if lote else hoy }}"></label>
+    <label>Cosecha <input type="date" name="cosecha" value="{{ lote.cosecha if lote and lote.cosecha else '' }}"></label></div>
+  <label>Cámara <select name="camara" data-camara-roi {{ 'disabled' if lote }}>
+    {% for c in opciones %}<option value="{{ c.id }}" {{ 'selected' if camara.id == c.id }}
+      data-foto="{{ c.foto_id or '' }}" data-ancho="{{ c.foto_ancho or '' }}" data-alto="{{ c.foto_alto or '' }}">{{ c.nombre }}</option>{% endfor %}</select></label>
+  <label>Retención prevista después de cosecha (días)
+    <input type="number" min="1" max="3650" name="retencion" value="{{ lote.retencion_dias if lote and lote.retencion_dias else '' }}"></label>
+</section>
+<section class="panel form-col">
+  <h2>Región de interés</h2>
+  <p class="muted">Arrastrá sobre la imagen para delimitar la bandeja o ajustá los porcentajes.</p>
+  <div class="roi" data-roi {{ 'hidden' if not camara.foto_id }}>
+    <img {% if camara.foto_id %}src="/miniaturas/{{ camara.foto_id }}.jpg"{% endif %} alt="Captura de referencia" draggable="false"><span class="roi-marco"></span>
+  </div>
+  <p data-sin-foto class="muted" {{ 'hidden' if camara.foto_id }}>Esta cámara todavía no tiene un JPG de referencia.</p>
+  {% set r = lote.roi if lote else [0, 0, 1, 1] %}
+  <div class="campos">
+    <label>Desde izquierda (%) <input name="x" type="number" min="0" max="99" step="0.1" required value="{{ (r[0]*100)|round(1) }}"></label>
+    <label>Desde arriba (%) <input name="y" type="number" min="0" max="99" step="0.1" required value="{{ (r[1]*100)|round(1) }}"></label>
+    <label>Ancho (%) <input name="ancho" type="number" min="1" max="100" step="0.1" required value="{{ (r[2]*100)|round(1) }}"></label>
+    <label>Alto (%) <input name="alto" type="number" min="1" max="100" step="0.1" required value="{{ (r[3]*100)|round(1) }}"></label>
+  </div>
+  <details><summary>Escala física opcional</summary>
+    {% set e = lote.escala if lote and lote.escala else ['', '', '', ''] %}
+    <p class="muted">Medí una referencia en el plano de la bandeja sobre el JPG original.</p>
+    <div class="campos">
+      <label>Longitud real (cm) <input name="escala_cm" type="number" min="0.01" step="any" value="{{ e[0] }}"></label>
+      <label>Longitud medida (px) <input name="escala_px" type="number" min="1" step="any" value="{{ e[1] }}"></label>
+      <label>Ancho del original (px) <input name="escala_ancho" type="number" min="1" value="{{ e[2] }}" placeholder="{{ camara.foto_ancho or '' }}"></label>
+      <label>Alto del original (px) <input name="escala_alto" type="number" min="1" value="{{ e[3] }}" placeholder="{{ camara.foto_alto or '' }}"></label>
+    </div>
+  </details>
+</section>
+</div>
+<button class="boton primario">Guardar lote</button>
+</form>
+{% endblock %}

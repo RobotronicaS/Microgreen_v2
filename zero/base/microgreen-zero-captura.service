@@ -1,0 +1,9 @@
+[Unit]
+Description=Capturar y enviar JPG de MicroGreenVision
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/MicroGreenVision_Zero
+ExecStart=/usr/bin/python3 %h/MicroGreenVision_Zero/capturar_enviar.py ciclo
+TimeoutStartSec=25min
+UMask=0077

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ vivero }}/ajustes">Ajustes del invernáculo</a> / {{ nodo }}</p>
+<section class="panel estrecho">
+  <h1>Credencial de {{ nodo }}</h1>
+  <p>Copiá este contenido a <code>central.json</code> en la Zero y completá la URL privada de Central.</p>
+  <label>Configuración del nodo <textarea id="credencial" rows="9" readonly spellcheck="false">{{ config }}</textarea></label>
+  <div class="acciones"><button class="boton primario" data-copiar="credencial">Copiar</button><a class="boton" href="/viveros/{{ vivero }}/ajustes">Volver</a></div>
+</section>
+{% endblock %}

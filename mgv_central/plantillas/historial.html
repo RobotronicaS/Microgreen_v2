@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/">Invernáculos</a> / <a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / {{ camara.id }}</p>
+<div class="titulo"><div><h1>{{ camara.nombre }}</h1><p class="muted">Historial de capturas · {{ sitio.zona }}</p></div>
+  {% if usuario.rol == 'tecnico' %}<a class="boton" href="/viveros/{{ sitio.id }}/lotes/nuevo?camara={{ camara.id }}">Crear lote en esta cámara</a>{% endif %}
+</div>
+{% set ruta = '/viveros/' ~ sitio.id ~ '/camaras/' ~ camara.id %}
+<section class="panel herramientas">
+  <form class="form-linea" method="get" action="{{ ruta }}">
+    <label>Fecha <input type="date" name="fecha" value="{{ fecha }}"></label>
+    <label>Lote <select name="lote"><option value="">Todos</option>
+      {% for l in lotes %}<option value="{{ l.id }}" {{ 'selected' if lote == l.id }}>{{ l.nombre }}</option>{% endfor %}</select></label>
+    <button class="boton primario">Filtrar</button>
+    <a class="boton" href="{{ ruta }}?fecha={{ hoy }}">Hoy</a>
+    {% if anterior_dia %}<a class="boton" href="{{ ruta }}?fecha={{ anterior_dia }}{% if lote %}&amp;lote={{ lote }}{% endif %}">Día anterior</a>{% endif %}
+    {% if siguiente_dia %}<a class="boton" href="{{ ruta }}?fecha={{ siguiente_dia }}{% if lote %}&amp;lote={{ lote }}{% endif %}">Día siguiente</a>{% endif %}
+    <a class="boton" href="{{ ruta }}">Todas las fechas</a>
+  </form>
+  <details><summary>Generar timelapse</summary>
+    <form class="form-linea" method="post" action="{{ ruta }}/seleccion">
+      <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+      <label>Desde <input type="date" name="desde" value="{{ fecha or hoy }}" required></label>
+      <label>Hasta <input type="date" name="hasta" value="{{ fecha or hoy }}" required></label>
+      <label>Cuadros por segundo <select name="fps"><option>6</option><option selected>12</option><option>24</option></select></label>
+      <button class="boton primario" name="accion" value="timelapse">Preparar video</button>
+    </form>
+  </details>
+</section>
+{% if fotos %}
+<form id="seleccion" class="acciones" method="post" action="{{ ruta }}/seleccion">
+  <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+  <button class="boton primario" name="accion" value="comparar">Comparar dos fotos</button>
+  <button class="boton" name="accion" value="zip">Preparar ZIP</button>
+  <span class="muted" data-contador>0 seleccionadas</span>
+</form>
+<div class="grilla-fotos">
+  {% for f in fotos %}
+  <article class="tarjeta-camara">
+    <a class="marco" href="/fotos/{{ f.id }}.jpg" target="_blank" rel="noopener">
+      <img loading="lazy" src="/miniaturas/{{ f.id }}.jpg" alt="Captura de {{ camara.id }} del {{ f.capturada_en|fecha_local(sitio.zona) }}">
+    </a>
+    <div class="cuerpo-camara">
+      <label class="marcar"><input type="checkbox" name="fotos" value="{{ f.id }}" form="seleccion"> {{ f.capturada_en|fecha_local(sitio.zona) }}</label>
+      <p class="muted">Recepción {{ f.recibida_en|fecha_local(sitio.zona) }} · {{ f.bytes|peso }}</p>
+      {% if f.revision %}<span class="estado {{ 'aldia' if f.revision == 'aceptada' else 'pausada' }}">{{ f.revision|capitalize }}</span>
+      {% elif f.problemas %}<span class="estado alerta">{{ f.problemas|join(' · ') }}</span>
+      {% elif f.problemas is none %}<span class="estado esperando">Evaluación pendiente</span>
+      {% else %}<span class="estado aldia">Apta</span>{% endif %}
+      {% if usuario.rol == 'tecnico' and f.problemas is not none and (f.problemas or f.revision) %}
+      <form class="acciones revision" action="/fotos/{{ f.id }}/revisar" method="post">
+        <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+        <button class="boton" name="revision" value="aceptada">Aceptar</button>
+        <button class="boton" name="revision" value="descartada">Descartar</button>
+        {% if f.revision %}<button class="boton" name="revision" value="automatica">Automática</button>{% endif %}
+      </form>{% endif %}
+    </div>
+  </article>
+  {% endfor %}
+</div>
+<div class="acciones paginacion">
+  {% if pagina > 1 %}<a class="boton" href="?pagina_numero={{ pagina - 1 }}&amp;fecha={{ fecha }}{% if lote %}&amp;lote={{ lote }}{% endif %}">Página anterior</a>{% endif %}
+  <span class="muted">Página {{ pagina }}</span>
+  {% if siguiente %}<a class="boton" href="?pagina_numero={{ pagina + 1 }}&amp;fecha={{ fecha }}{% if lote %}&amp;lote={{ lote }}{% endif %}">Página siguiente</a>{% endif %}
+</div>
+{% else %}<p class="panel muted">Sin capturas para este filtro.</p>{% endif %}
+{% endblock %}

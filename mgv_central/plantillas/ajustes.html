@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% macro campos(c=none) %}
+<div class="campos">
+  <label>Puesto <input name="id" required maxlength="32" value="{{ c.id if c else '' }}" {{ 'readonly' if c }} placeholder="H1-C02"></label>
+  <label>Nombre <input name="nombre" required maxlength="80" value="{{ c.nombre if c else '' }}"></label>
+  <label>Hilera <input name="hilera" maxlength="25" value="{{ c.hilera if c else '1' }}"></label>
+  <label>Nodo <select name="nodo" required>{% for n in nodos %}
+    <option value="{{ n.id }}" {{ 'selected' if c and c.nodo_id == n.id }}>{{ n.nombre }}</option>{% endfor %}</select></label>
+  <label>Frecuencia <select name="intervalo">{% for i in intervalos %}
+    <option value="{{ i }}" {{ 'selected' if i == (c.intervalo if c else 30) }}>{{ i }} min</option>{% endfor %}</select></label>
+  <label>Atraso (min) <input name="atraso" type="number" min="5" max="1440" required value="{{ c.atraso_minutos if c else 65 }}"></label>
+  <label>Desde <input name="desde" type="time" required value="{{ c.desde.strftime('%H:%M') if c else '00:00' }}"></label>
+  <label>Hasta <input name="hasta" type="time" required value="{{ c.hasta.strftime('%H:%M') if c else '00:00' }}"></label>
+</div>
+<label class="marcar"><input type="checkbox" name="activa" value="si" {{ 'checked' if not c or c.activa }}> Captura activa</label>
+{% endmacro %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / Ajustes</p>
+<h1>Ajustes de {{ sitio.nombre }}</h1>
+<div class="dos-columnas">
+<section class="panel">
+  <h2>Invernáculo</h2>
+  <form method="post" class="form-col">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Nombre <input name="nombre" value="{{ sitio.nombre }}" maxlength="80" required></label>
+    <label>Ubicación <input name="ubicacion" value="{{ sitio.ubicacion }}" maxlength="120"></label>
+    <label>Zona horaria <input name="zona" value="{{ sitio.zona }}" required></label>
+    <button class="boton primario">Guardar</button>
+  </form>
+</section>
+<section class="panel">
+  <h2>Nodos de captura</h2>
+  <ul class="lista">{% for n in nodos %}
+    <li><div><strong>{{ n.nombre }}</strong><div class="muted">{{ n.id }} · {{ 'Enlazado' if n.enlazado else 'Pendiente de enlace' }}
+    {% if n.entrada_legacy %} · Recepción rsync{% endif %}</div></div>
+    {% if usuario.administrador %}
+      <form method="post" action="/viveros/{{ sitio.id }}/nodos/{{ n.id }}/credencial" {% if n.enlazado %}data-confirmar="La Zero necesitará la nueva credencial. ¿Renovarla?"{% endif %}>
+        <input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton">{{ 'Renovar credencial' if n.enlazado else 'Generar credencial' }}</button>
+      </form>
+    {% endif %}</li>
+  {% endfor %}</ul>
+  {% if usuario.administrador %}
+  <details><summary>Agregar nodo</summary>
+    <form method="post" class="form-linea" action="/viveros/{{ sitio.id }}/nodos">
+      <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+      <label>Identificador <input name="id" required maxlength="32" placeholder="zero02"></label>
+      <label>Nombre <input name="nombre" required maxlength="80"></label>
+      <button class="boton primario">Agregar</button>
+    </form>
+  </details>{% endif %}
+</section>
+</div>
+<section class="panel">
+  <div class="titulo"><h2>Cámaras <small>({{ camaras|length }})</small></h2>
+  <form method="post" class="form-linea" action="/viveros/{{ sitio.id }}/plantilla">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Nodo <select name="nodo">{% for n in nodos %}<option value="{{ n.id }}">{{ n.nombre }}</option>{% endfor %}</select></label>
+    <button class="boton">Completar 15 puestos</button>
+  </form></div>
+  <p class="muted">Si Desde y Hasta coinciden, la captura abarca las 24 horas. El horario se aplica a los nodos con el agente Central instalado.</p>
+  <details><summary>Agregar puesto</summary>
+    <form method="post" class="form-col" action="/viveros/{{ sitio.id }}/camaras">
+      <input type="hidden" name="csrf" value="{{ usuario.csrf }}">{{ campos() }}
+      <button class="boton primario">Crear puesto</button>
+    </form>
+  </details>
+  {% for c in camaras %}
+  <details><summary>{{ c.id }} · {{ c.nombre }} · {{ 'Activa' if c.activa else 'Sin habilitar' }}</summary>
+    <form method="post" class="form-col" action="/viveros/{{ sitio.id }}/camaras">
+      <input type="hidden" name="csrf" value="{{ usuario.csrf }}">{{ campos(c) }}
+      <button class="boton primario">Guardar {{ c.id }}</button>
+    </form>
+  </details>
+  {% endfor %}
+</section>
+{% endblock %}

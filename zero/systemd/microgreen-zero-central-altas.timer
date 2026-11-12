@@ -1,0 +1,11 @@
+[Unit]
+Description=MicroGreenVision Zero · revisar altas de cámaras
+
+[Timer]
+OnStartupSec=10s
+OnUnitInactiveSec=10s
+AccuracySec=2s
+RandomizedDelaySec=2s
+
+[Install]
+WantedBy=timers.target

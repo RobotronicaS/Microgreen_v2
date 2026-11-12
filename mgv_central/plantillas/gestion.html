@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block contenido %}
+<h1>Administración</h1>
+<div class="dos-columnas">
+<section class="panel" id="nuevo">
+  <h2>Nuevo invernáculo</h2>
+  <form class="form-col" method="post" action="/gestion/viveros">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Nombre <input name="nombre" required maxlength="80" placeholder="Invernáculo Norte"></label>
+    <label>Identificador <input name="id" required maxlength="32" placeholder="norte"></label>
+    <label>Ubicación <input name="ubicacion" maxlength="120"></label>
+    <div class="campos"><label>Zona horaria <input name="zona" value="America/Montevideo" required></label>
+      <label>Nodo inicial <input name="nodo" value="zero01" maxlength="32" required></label></div>
+    <label class="marcar"><input type="checkbox" name="plantilla" value="si" checked> Crear 15 puestos en 3 hileras</label>
+    <button class="boton primario">Crear invernáculo</button>
+  </form>
+</section>
+<section class="panel"><h2>Invernáculos</h2>
+  <ul class="lista">{% for s in sitios %}
+    <li><div><strong>{{ s.nombre }}</strong><div class="muted">{{ s.id }} · {{ s.zona }}</div></div><a class="boton" href="/viveros/{{ s.id }}/ajustes">Ajustes</a></li>
+  {% else %}<li class="muted">Sin sitios registrados.</li>{% endfor %}</ul>
+</section>
+</div>
+<div class="dos-columnas">
+<section class="panel">
+  <h2>Nueva cuenta</h2>
+  <form class="form-col" method="post" action="/gestion/usuarios">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Usuario <input name="nombre" minlength="3" maxlength="40" required></label>
+    <label>Contraseña inicial <input type="password" name="clave" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+    <label class="marcar"><input type="checkbox" name="administrador" value="si"> Administrador de todos los sitios</label>
+    <button class="boton primario">Crear cuenta</button>
+  </form>
+  <ul class="lista separada">{% for c in cuentas %}
+    <li><div><strong>{{ c.nombre }}</strong><div class="muted">{{ 'Administrador' if c.administrador else 'Permisos por sitio' }} · {{ 'Activa' if c.activo else 'Suspendida' }}</div></div>
+      {% if usuario.id != c.id %}<form method="post" action="/gestion/usuarios/{{ c.id }}/estado">
+      <input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton" name="activo" value="{{ 'no' if c.activo else 'si' }}">{{ 'Suspender' if c.activo else 'Activar' }}</button>
+      </form>{% endif %}</li>
+  {% endfor %}</ul>
+</section>
+<section class="panel">
+  <h2>Permisos por sitio</h2>
+  <form class="form-col" method="post" action="/gestion/permisos">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Cuenta <select name="cuenta" required><option value="">Elegir</option>
+      {% for c in cuentas if not c.administrador %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}</select></label>
+    <label>Invernáculo <select name="vivero" required>{% for s in sitios %}<option value="{{ s.id }}">{{ s.nombre }}</option>{% endfor %}</select></label>
+    <label>Acceso <select name="rol"><option value="consulta">Consulta</option><option value="tecnico">Técnico</option><option value="retirar">Retirar acceso</option></select></label>
+    <button class="boton primario">Guardar acceso</button>
+  </form>
+  <ul class="lista separada">{% for p in permisos %}<li><span>{{ p.usuario }} · {{ p.sitio }}</span><span>{{ p.rol }}</span></li>{% endfor %}</ul>
+</section>
+</div>
+<section class="panel"><h2>Actividad administrativa</h2>
+  <div class="tabla-wrap"><table><thead><tr><th>Fecha</th><th>Cuenta</th><th>Operación</th><th>Invernáculo</th></tr></thead><tbody>
+  {% for h in historial %}<tr><td>{{ h.fecha|fecha_local }}</td><td>{{ h.nombre or '—' }}</td><td>{{ h.accion }} {{ h.detalle }}</td><td>{{ h.vivero_id or '—' }}</td></tr>
+  {% else %}<tr><td colspan="4">Sin operaciones registradas.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

@@ -1,0 +1,11 @@
+[Unit]
+Description=Panel local de MicroGreenVision Zero
+
+[Service]
+WorkingDirectory=%h/MicroGreenVision_Zero
+ExecStart=/usr/bin/python3 %h/MicroGreenVision_Zero/panel.py
+Restart=on-failure
+UMask=0077
+
+[Install]
+WantedBy=default.target

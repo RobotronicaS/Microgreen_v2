@@ -1,0 +1,10 @@
+[Unit]
+Description=Capturar cámaras cada 30 minutos
+
+[Timer]
+OnCalendar=*-*-* *:00,30:00
+AccuracySec=1s
+Persistent=true
+
+[Install]
+WantedBy=timers.target

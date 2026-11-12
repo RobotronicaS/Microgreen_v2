@@ -1,0 +1,10 @@
+[Unit]
+Description=Revisar los JPG recibidos cada minuto
+
+[Timer]
+OnStartupSec=15s
+OnUnitInactiveSec=60s
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/">Invernáculos</a> / {{ sitio.nombre }}</p>
+<div class="titulo">
+  <div><h1>{{ sitio.nombre }}</h1><p class="muted">{{ sitio.aldia }} de {{ sitio.activas }} cámaras activas al día · {{ sitio.recibidas }} JPG hoy</p></div>
+  <div class="acciones">
+    <a class="boton" href="/viveros/{{ sitio.id }}/lotes">Lotes</a><a class="boton" href="/viveros/{{ sitio.id }}/sensores">Sensores</a>
+    {% if usuario.rol == 'tecnico' %}<a class="boton" href="/viveros/{{ sitio.id }}/ajustes">Configurar cámaras</a>
+    <a class="boton primario" href="/viveros/{{ sitio.id }}/alta-camara">Agregar cámara</a>{% endif %}
+  </div>
+</div>
+{% for hilera, fichas in hileras.items() %}
+<section class="hilera">
+  <h2>{{ 'Hilera ' ~ hilera if hilera else 'Cámaras' }}</h2>
+  <div class="grilla-camaras">
+    {% for ficha in fichas %}
+    <article class="tarjeta-camara">
+      <a class="marco" href="/viveros/{{ sitio.id }}/camaras/{{ ficha.id }}">
+        {% if ficha.foto_id %}<img loading="lazy" src="/miniaturas/{{ ficha.foto_id }}.jpg" alt="Última foto de {{ ficha.nombre }}">
+        {% else %}<span>Pendiente de captura</span>{% endif %}
+      </a>
+      <div class="cuerpo-camara">
+        <h3>{{ ficha.nombre }}</h3>
+        <span class="estado {{ ficha.estado }}">{{ ficha.etiqueta }}</span>
+        <p class="muted">{{ ficha.capturada_en|fecha_local(sitio.zona) }}</p>
+        <a class="enlace" href="/viveros/{{ sitio.id }}/camaras/{{ ficha.id }}">Ver historial</a>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<p class="panel muted">Agregá un puesto para recibir las primeras capturas.</p>
+{% endfor %}
+{% if lotes or sensores %}
+<div class="dos-columnas">
+  {% if lotes %}
+  <section class="panel"><h2>Lotes recientes</h2><ul class="lista">{% for lote in lotes %}
+    <li><a href="/lotes/{{ lote.id }}">{{ lote.nombre }}</a><span class="muted">{{ lote.camara_id }} · {{ lote.especie }}</span></li>
+  {% endfor %}</ul></section>{% endif %}
+  {% if sensores %}
+  <section class="panel"><h2>Últimas lecturas</h2><ul class="lista">{% for s in sensores %}
+    <li><div>{{ s.origen }} <span class="muted">{{ s.fecha|fecha_local(sitio.zona) }}</span></div>
+      <div>{{ s.temp_c if s.temp_c is not none else '—' }} °C · {{ s.humedad_pct if s.humedad_pct is not none else '—' }} % ·
+      {{ s.lux if s.lux is not none else '—' }} lx · {{ s.co2_ppm if s.co2_ppm is not none else '—' }} ppm</div></li>
+  {% endfor %}</ul></section>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

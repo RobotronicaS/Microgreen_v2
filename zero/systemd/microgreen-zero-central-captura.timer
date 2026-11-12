@@ -1,0 +1,11 @@
+[Unit]
+Description=MicroGreenVision Zero · programar capturar
+
+[Timer]
+OnCalendar=*-*-* *:00/5:05
+Persistent=true
+RandomizedDelaySec=12s
+AccuracySec=2s
+
+[Install]
+WantedBy=timers.target

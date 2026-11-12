@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es-UY">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if titulo %}{{ titulo }} · {% endif %}MicroGreenVision Central</title>
+  <link rel="stylesheet" href="/static/panel.css">
+  <script defer src="/static/panel.js"></script>
+</head>
+<body>
+<header class="cabecera">
+  <div class="envoltura cabecera-interior">
+    <a href="/" class="marca">MicroGreenVision <span>Central</span></a>
+    {% if usuario %}
+    <nav aria-label="Secciones">
+      <a href="/">Invernáculos</a><a href="/alertas">Alertas</a><a href="/supervisor"{% if request.url.path in ('/supervisor', '/diagnostico') %} aria-current="page"{% endif %}>Supervisor</a>
+      <a href="/trabajos">Procesamiento</a>{% if usuario.administrador %}<a href="/gestion">Administración</a>{% endif %}
+    </nav>
+    <div class="sesion">
+      <a href="/cuenta">{{ usuario.nombre }}</a>
+      <form method="post" action="/salir"><input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton claro" type="submit">Salir</button></form>
+    </div>
+    {% endif %}
+  </div>
+</header>
+<main class="envoltura {% block clase_main %}{% endblock %}">
+  {% block contenido %}{% endblock %}
+</main>
+</body>
+</html>

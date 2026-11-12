@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="titulo"><h1>Procesamiento</h1><a class="boton" href="/trabajos">Actualizar</a></div>
+{% if resumen %}<div class="indicadores">{% for r in resumen %}<div><span>{{ r.estado|replace('_', ' ')|capitalize }}</span><strong>{{ r.cantidad }}</strong></div>{% endfor %}</div>{% endif %}
+<section class="panel"><ul class="lista">
+  {% for t in trabajos %}
+  <li>
+    <div><strong>{{ {'zip':'Descarga ZIP', 'timelapse':'Timelapse', 'reanalizar':'Análisis de lote', 'analisis':'Análisis de foto'}[t.tipo] }}</strong>
+      <span class="estado {{ 'aldia' if t.estado == 'listo' else 'alerta' if t.estado == 'error' else 'esperando' }}">{{ t.estado|replace('_', ' ') }}</span>
+      <p>{{ t.nombre }} · {{ t.creado_en|fecha_local }}{% if t.mensaje %} · {{ t.mensaje }}{% endif %}</p>
+      {% if t.tipo == 'timelapse' and t.estado == 'listo' and t.salida %}
+      <details><summary>Reproducir video</summary><video controls preload="none" src="/trabajos/{{ t.id }}/archivo"></video></details>{% endif %}
+    </div>
+    {% if t.estado == 'listo' and t.salida %}<a class="boton primario" href="/trabajos/{{ t.id }}/archivo" download>Descargar</a>
+    {% elif t.estado == 'error' and t.puede_reintentar %}
+      <form method="post" action="/trabajos/{{ t.id }}/reintentar"><input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton">Reintentar</button></form>
+    {% endif %}
+  </li>
+  {% else %}<li class="muted">Las exportaciones y los análisis de lotes aparecerán acá.</li>{% endfor %}
+</ul></section>
+{% endblock %}

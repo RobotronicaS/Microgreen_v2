@@ -1,0 +1,15 @@
+[Unit]
+Description=Panel web de MicroGreenVision Central
+
+[Service]
+Type=simple
+WorkingDirectory=%h/MicroGreenVision_Central
+ExecStart=/usr/bin/python3 -m uvicorn mgv_central.panel:app --host 127.0.0.1 --port 8766 --limit-concurrency 48 --no-access-log
+Environment=PYTHONUNBUFFERED=1
+UMask=0077
+NoNewPrivileges=true
+Restart=on-failure
+RestartSec=4
+
+[Install]
+WantedBy=default.target

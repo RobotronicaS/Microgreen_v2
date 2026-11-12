@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="titulo">
+  <h1>Supervisor</h1>
+  <div class="acciones">
+    <a class="boton primario" href="/supervisor" data-supervisor-actualizar>Actualizar</a>
+    <a class="boton" href="/diagnostico">Diagnóstico detallado</a>
+  </div>
+</div>
+<div data-supervisor>
+  <p class="aviso" role="status" data-supervisor-mensaje hidden>
+    <span data-supervisor-error></span>
+    <a href="/ingresar" data-supervisor-ingreso hidden>Ingresar</a>
+  </p>
+  {% include "supervisor_estado.html" %}
+</div>
+<script defer src="/static/supervisor.js"></script>
+{% endblock %}

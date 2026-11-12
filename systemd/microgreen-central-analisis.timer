@@ -1,0 +1,10 @@
+[Unit]
+Description=MicroGreenVision Central · programar analisis
+
+[Timer]
+OnStartupSec=24s
+OnUnitInactiveSec=15s
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target

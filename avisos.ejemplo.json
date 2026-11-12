@@ -1,0 +1,17 @@
+{
+  "correo": {
+    "habilitado": false,
+    "servidor": "smtp.ejemplo.com",
+    "puerto": 587,
+    "modo": "starttls",
+    "usuario": "",
+    "clave": "",
+    "desde": "",
+    "para": []
+  },
+  "telegram": {
+    "habilitado": false,
+    "token": "",
+    "chat_id": ""
+  }
+}

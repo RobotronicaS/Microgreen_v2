@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="titulo"><div><h1>Invernáculos</h1><p class="muted">{{ cantidad }} sitios registrados</p></div>
+  <div class="acciones">
+    <a class="boton" href="{{ '/' if atrasadas else '/?atrasadas=true' }}">{{ 'Ver todos' if atrasadas else 'Requieren atención' }}</a>
+    {% if usuario.administrador %}<a class="boton primario" href="/gestion#nuevo">Agregar invernáculo</a>{% endif %}
+  </div>
+</div>
+<div class="indicadores">
+  <div><span>Cámaras al día</span><strong>{{ totales.aldia }} <small>/ {{ totales.activas }} activas</small></strong></div>
+  <div><span>JPG recibidos hoy</span><strong>{{ totales.recibidas }} <small>/ {{ totales.esperadas }} esperados</small></strong></div>
+  <div><span>Última revisión de entrada</span><strong class="valor-fecha">{{ importador.terminado_en|fecha_local if importador else 'Pendiente' }}</strong></div>
+</div>
+<div class="grilla-sitios">
+  {% for sitio in sitios %}
+  <article class="panel sitio">
+    <div class="fila"><h2><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a></h2>
+      {% if sitio.alertas or sitio.atrasadas %}<span class="estado alerta">{{ sitio.alertas or sitio.atrasadas }} avisos</span>{% endif %}
+    </div>
+    {% if sitio.ubicacion %}<p class="muted">{{ sitio.ubicacion }}</p>{% endif %}
+    <div class="mini-estado" aria-label="Estado de los puestos">
+      {% for cam in sitio.camaras %}
+        <a title="{{ cam.id }} · {{ cam.etiqueta }}" aria-label="{{ cam.id }} · {{ cam.etiqueta }}" class="{{ cam.estado }}" href="/viveros/{{ sitio.id }}/camaras/{{ cam.id }}"></a>
+      {% endfor %}
+    </div>
+    <dl class="ficha">
+      <dt>Cámaras al día</dt><dd>{{ sitio.aldia }} de {{ sitio.activas }} activas</dd>
+      <dt>JPG de hoy</dt><dd>{{ sitio.recibidas }} de {{ sitio.esperadas }} esperados</dd>
+      <dt>Última captura</dt><dd>{{ sitio.ultima|fecha_local(sitio.zona) }}</dd>
+    </dl>
+    <a class="boton primario" href="/viveros/{{ sitio.id }}">Abrir invernáculo</a>
+  </article>
+  {% else %}
+  <p class="panel muted">{{ 'No hay sitios con avisos abiertos.' if atrasadas else 'Todavía no hay invernáculos disponibles para tu cuenta.' }}</p>
+  {% endfor %}
+</div>
+{% endblock %}

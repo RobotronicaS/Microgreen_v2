@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / Agregar cámara</p>
+<div class="titulo"><h1>Agregar cámara</h1></div>
+<form method="post" action="/api/viveros/{{ sitio.id }}/altas" class="alta-camara" data-alta data-api="/api/viveros/{{ sitio.id }}/altas" data-solicitud="{{ solicitud }}">
+  <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+  <section class="panel alta-red">
+    <h2>Red del invernáculo</h2>
+    {% set preferida = nodos|selectattr('disponible')|first %}
+    <label>Zero de captura
+      <select name="nodo" required>
+        {% for n in nodos %}
+        <option value="{{ n.id }}" data-disponible="{{ 'si' if n.disponible else 'no' }}"
+                {% if n == preferida %}selected{% endif %}>{{ n.nombre }}{% if not n.disponible %} · sin enlace de alta{% endif %}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <p class="aviso" data-alta-enlace hidden>Vinculá la Zero y actualizá su agente a v0.4 para agregar desde aquí.
+      <a href="/viveros/{{ sitio.id }}/ajustes">Revisar nodos</a>
+    </p>
+    <button type="button" class="boton" data-alta-buscar disabled>Buscar cámaras</button>
+    <ul class="lista alta-equipos" data-alta-equipos hidden></ul>
+    <p class="muted alta-ayuda">La Zero busca equipos ONVIF en su Wi-Fi. También podés ingresar la dirección de la cámara.</p>
+  </section>
+
+  <section class="panel alta-datos">
+    <h2>Datos de la cámara</h2>
+    <div class="campos alta-campos">
+      <label>Puesto
+        <select name="camara" required>
+          {% for nodo, opciones in puestos.items() %}
+          {% for p in opciones %}
+          <option value="{{ p.id }}" data-nodo="{{ nodo }}">{{ p.id }}{% if p.nombre != p.id %} · {{ p.nombre }}{% endif %}</option>
+          {% endfor %}
+          {% endfor %}
+        </select>
+      </label>
+      <label>Nombre (opcional)<input name="nombre" maxlength="80" placeholder="Entrada de la hilera"></label>
+    </div>
+    <label>Tipo de cámara
+      <select name="tipo">
+        <option value="tapo">Tapo</option>
+        <option value="hikvision">Hikvision</option>
+        <option value="rtsp">Otra cámara RTSP</option>
+      </select>
+    </label>
+    <fieldset class="alta-perfil" data-alta-perfil>
+      <div class="campos alta-campos">
+        <label>IP de la cámara<input name="ip" inputmode="decimal" placeholder="192.168.1.42" maxlength="15" required></label>
+        <label>Puerto RTSP<input name="puerto" type="number" min="1" max="65535" value="554"></label>
+      </div>
+      <div class="campos alta-campos">
+        <label>Usuario de cámara<input name="usuario_camara" maxlength="128" autocomplete="off" required></label>
+        <label>Contraseña de cámara<input name="clave_camara" type="password" maxlength="256" autocomplete="new-password" required></label>
+      </div>
+      <label>Calidad de captura
+        <select name="perfil"><option value="secundario">Estándar</option><option value="principal">Alta</option></select>
+      </label>
+      <p class="muted alta-ayuda" data-alta-tapo>Ingresá la Cuenta de cámara que creaste en la app Tapo.</p>
+    </fieldset>
+    <fieldset class="alta-perfil" data-alta-rtsp hidden disabled>
+      <label>URL RTSP de la cámara
+        <input name="rtsp" type="password" autocomplete="new-password" maxlength="4096" placeholder="rtsp://usuario:clave@IP:554/ruta" required>
+      </label>
+    </fieldset>
+    <p class="muted alta-ayuda" data-alta-sin-puestos hidden>Esta Zero no tiene puestos disponibles en el plano de 15 cámaras.</p>
+    <button type="submit" class="boton primario" data-alta-guardar disabled>Probar y agregar</button>
+  </section>
+
+  <section class="panel alta-resultado" data-alta-resultado hidden aria-label="Resultado del alta">
+    <p role="status" data-alta-mensaje></p>
+    <img data-alta-foto alt="Primera captura de la cámara nueva" hidden>
+    <div class="acciones">
+      <a class="boton" data-alta-historial hidden>Ver historial</a>
+      <button type="button" class="boton primario" data-alta-otra hidden>Agregar otra cámara</button>
+    </div>
+  </section>
+  <noscript><p class="aviso">Habilitá JavaScript para buscar y probar cámaras desde Central.</p></noscript>
+</form>
+<script defer src="/static/alta_camara.js"></script>
+{% endblock %}

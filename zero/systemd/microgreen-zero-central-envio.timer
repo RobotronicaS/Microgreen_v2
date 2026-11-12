@@ -1,0 +1,11 @@
+[Unit]
+Description=MicroGreenVision Zero · programar enviar
+
+[Timer]
+OnStartupSec=20s
+OnUnitInactiveSec=55s
+RandomizedDelaySec=10s
+AccuracySec=2s
+
+[Install]
+WantedBy=timers.target
