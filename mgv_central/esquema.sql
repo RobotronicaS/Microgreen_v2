@@ -247,3 +247,25 @@ CREATE UNIQUE INDEX IF NOT EXISTS alta_camara_nodo_abierta ON altas_camara (vive
 CREATE UNIQUE INDEX IF NOT EXISTS alta_camara_puesto_abierta ON altas_camara (vivero_id, camara_id)
     WHERE camara_id IS NOT NULL AND estado IN ('pendiente', 'en_curso');
 CREATE INDEX IF NOT EXISTS alta_camara_usuario ON altas_camara (vivero_id, solicitante, creada_en DESC);
+
+CREATE TABLE IF NOT EXISTS vinculaciones_zero (
+    id text PRIMARY KEY,
+    vivero_id text NOT NULL,
+    nodo_id text NOT NULL,
+    solicitante bigint NOT NULL REFERENCES usuarios(id),
+    host text NOT NULL,
+    puerto integer NOT NULL CHECK (puerto BETWEEN 1 AND 65535),
+    usuario_ssh text NOT NULL,
+    estado text NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'en_curso', 'ok', 'error')),
+    mensaje text NOT NULL DEFAULT 'Preparando la conexión con la Zero.',
+    token_sha char(64),
+    token_previo_sha char(64),
+    creada_en timestamptz NOT NULL DEFAULT now(),
+    actualizada_en timestamptz NOT NULL DEFAULT now(),
+    terminada_en timestamptz,
+    FOREIGN KEY (vivero_id, nodo_id) REFERENCES nodos(vivero_id, id)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS vinculacion_zero_abierta ON vinculaciones_zero (vivero_id, nodo_id)
+    WHERE estado IN ('pendiente', 'en_curso');
+CREATE UNIQUE INDEX IF NOT EXISTS vinculacion_host_abierta ON vinculaciones_zero (host, puerto)
+    WHERE estado IN ('pendiente', 'en_curso');

@@ -64,10 +64,7 @@
         <a class="boton" href="/supervisor">Revisar conexión</a>
         {% endif %}
         {% if usuario.administrador %}
-        <form method="post" action="/viveros/{{ sitio.id }}/nodos/{{ n.id }}/credencial"{% if n.enlazado %} data-confirmar="La Zero necesitará la nueva credencial. ¿Renovarla?"{% endif %}>
-          <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
-          <button type="submit" class="boton{% if not n.enlazado %} primario{% endif %}">{{ 'Renovar credencial' if n.enlazado else 'Vincular Zero' }}</button>
-        </form>
+        <a href="/viveros/{{ sitio.id }}/nodos/{{ n.id }}/conectar" class="boton{% if not n.enlazado %} primario{% endif %}">{{ 'Configurar Zero' if n.enlazado else 'Vincular Zero' }}</a>
         {% elif not n.enlazado %}
         <p class="muted">Un administrador puede vincular este equipo.</p>
         {% endif %}

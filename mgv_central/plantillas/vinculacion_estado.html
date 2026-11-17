@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/equipos-zero?vivero={{ trabajo.vivero_id }}">Equipos Zero</a> / {{ trabajo.nodo_id }}</p>
+<section class="panel estrecho" data-vinculacion="{{ trabajo.id }}">
+  <h1>Vincular {{ trabajo.nodo_id }}</h1>
+  <p>{{ trabajo.host }}</p>
+  <p role="status" aria-live="polite" data-vinculacion-mensaje>{{ trabajo.mensaje }}</p>
+  <div class="acciones">
+    <a class="boton primario" href="/viveros/{{ trabajo.vivero_id }}/alta-camara?nodo={{ trabajo.nodo_id }}" data-vinculacion-lista{% if trabajo.estado != 'ok' %} hidden{% endif %}>Agregar cámara</a>
+    <a class="boton" href="/viveros/{{ trabajo.vivero_id }}/nodos/{{ trabajo.nodo_id }}/conectar" data-vinculacion-reintentar{% if trabajo.estado != 'error' %} hidden{% endif %}>Volver a intentar</a>
+    <a class="boton" href="/equipos-zero?vivero={{ trabajo.vivero_id }}">Volver a Equipos Zero</a>
+  </div>
+</section>
+<script defer src="/static/vinculacion.js"></script>
+{% endblock %}

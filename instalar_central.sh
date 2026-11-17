@@ -16,7 +16,7 @@ fi
 exec 9>"$HOME/.microgreen-central-instalacion.lock"
 flock -n 9 || { printf '%s\n' 'Ya hay una instalación en curso.'; exit 1; }
 apt_paquetes=(postgresql python3-fastapi python3-uvicorn python3-jinja2 python3-pydantic
-    python3-psycopg python3-pil python3-numpy ffmpeg rsync ca-certificates)
+    python3-psycopg python3-paramiko python3-pil python3-numpy ffmpeg rsync ca-certificates)
 if ! sudo apt install -y "${apt_paquetes[@]}"; then
     sudo apt update
     sudo apt install -y "${apt_paquetes[@]}"
@@ -79,6 +79,8 @@ if [[ -f "$destino/config.json" ]]; then
 fi
 install -d -m 700 "$destino/mgv_central"
 cp -a -- "$origen/mgv_central/." "$destino/mgv_central/"
+tar -czf "$destino/zero.tar.gz" -C "$origen" zero
+chmod 600 "$destino/zero.tar.gz"
 install -m 600 "$origen/README.md" "$destino/README.md"
 install -d -m 700 "$destino/docs"
 install -m 600 "$origen"/docs/*.md "$destino/docs/"
@@ -99,14 +101,14 @@ from urllib.request import urlopen
 for _ in range(20):
     try:
         with urlopen("http://127.0.0.1:8766/salud", timeout=2) as respuesta:
-            if json.load(respuesta) == {"estado": "ok", "version": "0.5"}:
-                print("Central v0.5 responde en 127.0.0.1:8766.")
+            if json.load(respuesta) == {"estado": "ok", "version": "0.6"}:
+                print("Central v0.6 responde en 127.0.0.1:8766.")
                 break
     except (OSError, URLError, ValueError):
         pass
     time.sleep(1)
 else:
-    raise SystemExit("Central v0.5 no respondió en 8766. Revisá microgreen-central-panel.service.")
+    raise SystemExit("Central v0.6 no respondió en 8766. Revisá microgreen-central-panel.service.")
 PY
 trap - EXIT
 printf 'Copia previa en %s\n' "$reserva"

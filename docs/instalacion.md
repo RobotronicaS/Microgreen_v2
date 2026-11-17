@@ -48,7 +48,7 @@ En la primera instalación, anotá la contraseña que aparece en **Primer acceso
 curl -fsS http://127.0.0.1:8766/salud
 ~~~
 
-El resultado esperado es `{"estado":"ok","version":"0.5"}`. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**. Guardá la contraseña de la instalación para el primer acceso por HTTPS.
+El resultado esperado es `{"estado":"ok","version":"0.6"}`. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**. Guardá la contraseña de la instalación para el primer acceso por HTTPS.
 
 ## 3. Configurá el acceso privado a Central
 
@@ -76,7 +76,7 @@ Si aparece un enlace para habilitar HTTPS en la red, seguí ese enlace y repetí
 2. Ingresá con tu cuenta de Central. En el primer acceso de una instalación nueva, usá **admin** y la contraseña que imprimió el instalador. Las actualizaciones conservan la contraseña anterior. En **Mi cuenta** podés cambiarla.
 3. Guardá el enlace como **MicroGreenVision Central** en favoritos. Usá la misma dirección en el campo `url` de cada Zero vinculada a este servidor y autorizá su acceso al puerto **8766** en Tailscale.
 
-Para comprobar el enlace, agregá `/salud` a la dirección HTTPS. El navegador debería mostrar `{"estado":"ok","version":"0.5"}`.
+Para comprobar el enlace, agregá `/salud` a la dirección HTTPS. El navegador debería mostrar `{"estado":"ok","version":"0.6"}`.
 
 ### Recuperá el acceso de admin
 
@@ -89,7 +89,20 @@ ssh.exe -t $central 'cd ~/MicroGreenVision_Central && /usr/bin/python3 -m mgv_ce
 
 Ingresá la contraseña SSH del usuario de Central. El comando genera una nueva contraseña para `admin`, la muestra en la terminal y cierra sus sesiones abiertas. Copiá la nueva contraseña e ingresá al panel con `admin`. Podés cambiarla desde **Mi cuenta**.
 
-## 4. Copiá el ZIP y la credencial a la Zero
+## 4. Vinculá la Zero desde la página
+
+La Zero debe estar encendida, conectada a Tailscale y tener SSH habilitado. Su usuario Linux debe tener permiso sudo.
+
+1. Abrí Central con el enlace HTTPS e ingresá como **admin**.
+2. Abrí **Equipos Zero** y buscá tu equipo. Para otra Raspberry, pulsá **Agregar Zero**, elegí el invernáculo, escribí un nombre y pulsá **Crear equipo**.
+3. En la ficha, pulsá **Vincular Zero**. Si el equipo ya estaba vinculado, el botón se llama **Configurar Zero**.
+4. Escribí la IP de Tailscale o el nombre de la Raspberry, su usuario Linux y la contraseña de ese usuario.
+5. Pulsá **Conectar e instalar**. Central copia el programa, prepara la credencial y comprueba el enlace. La página muestra el progreso y permite reintentar si ocurre un error.
+6. Cuando aparezca **Zero vinculada y lista para agregar cámaras**, pulsá **Agregar cámara**. Continuá con la [búsqueda de cámaras](../README.md#2-buscá-la-cámara).
+
+La dirección de Central se completa con el enlace desde el que abriste el panel. Podés revisarla en **Opciones de conexión**, junto al puerto SSH. Central usa la contraseña durante la instalación y guarda la identidad SSH del equipo para las próximas conexiones. Los registros de vinculación guardan el estado y los mensajes del procedimiento.
+
+## Instalación manual de la Zero
 
 En el panel, con la cuenta **admin**, abrí **Equipos Zero**. Buscá **Vivero piloto** y el equipo **zero01**. Para otra Raspberry, pulsá **Agregar Zero**, elegí su invernáculo, poné un nombre y creá el equipo. En la ficha correspondiente pulsá **Vincular Zero** y copiá el JSON. Si la Zero ya está vinculada a ese mismo nodo, usá su `central.json` actual. **Renovar credencial** cambia el acceso del equipo. Usá esa opción si necesitás reemplazar su credencial.
 
@@ -125,7 +138,7 @@ nano "$HOME/MicroGreenVision_Zero/central.json"
 
 Pegá el JSON en **nano** y reemplazá el valor de `"url"` por la URL HTTPS que copiaste. Conservá las comillas y el resto de los campos. Guardá con **Ctrl+O**, confirmá con **Enter** y salí con **Ctrl+X**. La credencial se usa en la Zero y se guarda fuera del repositorio.
 
-## 5. Instalá el agente y probá una cámara
+### Instalá el agente y probá una cámara
 
 Ejecutá en **la Zero**.
 

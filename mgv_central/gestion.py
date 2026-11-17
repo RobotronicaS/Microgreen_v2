@@ -199,10 +199,18 @@ def credencial(peticion: Request, vivero: str, nodo: str, datos: FormData = Depe
         usuario = exigir(conexion, peticion, vivero, admin=True, formulario=datos)
         token = secrets.token_urlsafe(32)
         with conexion.transaction():
+            fila(conexion, "SELECT id FROM nodos WHERE vivero_id = %s AND id = %s FOR UPDATE",
+                 (vivero, nodo), "Nodo desconocido.")
+            if conexion.execute(
+                """SELECT 1 FROM vinculaciones_zero WHERE vivero_id = %s AND nodo_id = %s
+                AND estado IN ('pendiente', 'en_curso') AND actualizada_en > now() - interval '2 minutes'
+                AND creada_en > now() - interval '20 minutes'""", (vivero, nodo),
+            ).fetchone():
+                raise HTTPException(409, "Esperá a que termine la vinculación en curso de esta Zero.")
             equipo = fila(conexion, """UPDATE nodos SET token_sha = %s, autorizado_en = now(), ultimo_contacto = NULL, alta_en = NULL, reporte = '{}'
                  WHERE vivero_id = %s AND id = %s RETURNING nombre""", (huella(token), vivero, nodo), "Nodo desconocido.")
             auditar(conexion, usuario, vivero, "emitir credencial", nodo)
-    config = json.dumps({"url": "https://TU-NODO.ts.net:8766", "vivero": vivero, "nodo": nodo, "token": token}, indent=2)
+    config = json.dumps({"url": str(peticion.base_url).rstrip("/"), "vivero": vivero, "nodo": nodo, "token": token}, indent=2)
     return pagina(peticion, "credencial.html", usuario, config=config, nombre=equipo["nombre"],
                   retorno=enlace_equipo(vivero, nodo), titulo="Vincular Zero")
 

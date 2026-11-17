@@ -1,6 +1,6 @@
 # Microgreen2
 
-Microgreen2 usa **MicroGreenVision Central v0.5** y una Raspberry Pi Zero para tomar fotos de un invernáculo. En esta práctica vas a agregar **una cámara**, tomar su primera foto y verla en el historial.
+Microgreen2 usa **MicroGreenVision Central v0.6** y una Raspberry Pi Zero para tomar fotos de un invernáculo. En esta práctica vas a agregar **una cámara**, tomar su primera foto y verla en el historial.
 
 | Equipo | Qué hace |
 | --- | --- |
@@ -15,6 +15,8 @@ GitHub guarda el código y esta guía. Para trabajar con la cámara, abrí el pa
 Tené a mano el enlace del panel, tu usuario y contraseña, y el nombre del invernáculo y puesto que te asignó el docente. Usá la cámara de la práctica y conectala a la misma red local que la Zero. Para el alta vas a necesitar la cuenta local de la cámara o su URL RTSP.
 
 Si te toca instalar los equipos, seguí la [instalación desde cero](docs/instalacion.md). La [guía del docente](docs/docente.md) explica cómo darte acceso al repositorio y preparar tu cuenta.
+
+Para preparar una Zero desde el panel, abrí **Equipos Zero → Vincular Zero**, completá su dirección, usuario y contraseña y pulsá **Conectar e instalar**. Central comprueba la conexión y habilita **Agregar cámara**. Seguí el [procedimiento de vinculación](docs/instalacion.md#4-vinculá-la-zero-desde-la-página).
 
 ## 1. Entrá a tu invernáculo
 

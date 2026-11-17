@@ -23,6 +23,7 @@ from .gestion import rutas as gestion
 from .receptor import api
 from .resumen import resumen_camaras, viveros_visibles
 from .supervisor import estado_supervisor
+from .vinculacion import rutas as vinculacion
 from .web import datos_formulario, fila, foto_ruta, local_hoy, pagina, puesto, sitio, volver
 
 app = FastAPI(title="MicroGreenVision Central", docs_url=None, redoc_url=None, openapi_url=None)
@@ -31,6 +32,7 @@ app.include_router(api)
 app.include_router(altas)
 app.include_router(gestion)
 app.include_router(cultivos)
+app.include_router(vinculacion)
 POR_PAGINA = 48
 
 
@@ -81,7 +83,7 @@ async def error_base(peticion, error):
 def salud():
     with conectar(cargar_configuracion()) as conexion:
         conexion.execute("SELECT 1")
-    return {"estado": "ok", "version": "0.5"}
+    return {"estado": "ok", "version": "0.6"}
 
 
 @app.get("/ingresar")

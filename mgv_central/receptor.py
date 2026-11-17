@@ -27,11 +27,16 @@ def autenticar(conexion, peticion, vivero, nodo):
     if not auth.startswith("Bearer ") or len(auth) != 50 or not auth.isascii():
         raise HTTPException(401, "Credencial de nodo requerida.")
     fila = conexion.execute(
-        """SELECT n.token_sha, v.zona FROM nodos n JOIN viveros v ON v.id = n.vivero_id
+        """SELECT n.token_sha, v.zona,
+        (SELECT z.token_sha FROM vinculaciones_zero z
+         WHERE z.vivero_id = n.vivero_id AND z.nodo_id = n.id AND z.estado = 'en_curso'
+         AND z.actualizada_en > now() - interval '2 minutes' AND z.creada_en > now() - interval '20 minutes') AS token_instalacion
+        FROM nodos n JOIN viveros v ON v.id = n.vivero_id
         WHERE n.vivero_id = %s AND n.id = %s""",
         (vivero, nodo),
     ).fetchone()
-    if not fila or not fila["token_sha"] or not secrets.compare_digest(huella(auth[7:]), fila["token_sha"]):
+    if not fila or not any(secrets.compare_digest(huella(auth[7:]), token)
+                           for token in (fila["token_sha"], fila["token_instalacion"]) if token):
         raise HTTPException(401, "Credencial de nodo inválida.")
     return fila
 

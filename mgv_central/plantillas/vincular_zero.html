@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block contenido %}
+<p class="ruta"><a href="/equipos-zero?vivero={{ vivero }}">Equipos Zero</a> / {{ nombre }}</p>
+<section class="panel estrecho">
+  <h1>Vincular {{ nombre }}</h1>
+  <p>Ingresá los datos de la Raspberry. Central instalará el agente y comprobará la conexión.</p>
+  <form method="post" action="/viveros/{{ vivero }}/nodos/{{ nodo }}/conectar" class="form-col" data-vincular-zero>
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>IP o nombre de la Zero
+      <input name="host" required maxlength="253" placeholder="100.x.x.x" autocomplete="off" spellcheck="false">
+    </label>
+    <label>Usuario de la Raspberry
+      <input name="usuario_ssh" required maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false">
+    </label>
+    <label>Contraseña de la Raspberry
+      <input name="clave_ssh" type="password" required maxlength="256" autocomplete="current-password">
+    </label>
+    <details>
+      <summary>Opciones de conexión</summary>
+      <div class="form-col">
+        <label>Dirección HTTPS de Central <input name="url" type="url" value="{{ url }}" required></label>
+        <label>Puerto SSH <input name="puerto" type="number" value="22" min="1" max="65535" required></label>
+      </div>
+    </details>
+    <button type="submit" class="boton primario">Conectar e instalar</button>
+  </form>
+  <p class="muted">La Zero debe estar encendida, con SSH habilitado y conectada a Tailscale. Usá su cuenta Linux con permiso sudo.</p>
+  <details>
+    <summary>Instalación manual</summary>
+    <form method="post" action="/viveros/{{ vivero }}/nodos/{{ nodo }}/credencial" data-confirmar="Se generará una nueva credencial para configurar esta Zero manualmente. ¿Continuar?">
+      <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+      <button type="submit" class="boton">Generar configuración manual</button>
+    </form>
+  </details>
+</section>
+<script defer src="/static/vinculacion.js"></script>
+{% endblock %}
