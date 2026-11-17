@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block contenido %}
+<h1>Avisos y respaldos</h1>
+{% if guardado == 'avisos' %}<p class="estado aldia" role="status">Configuración de avisos guardada</p>{% endif %}
+{% if guardado == 'respaldo' %}<p class="estado aldia" role="status">Configuración de respaldos guardada</p>{% endif %}
+
+<section class="panel" id="avisos">
+  <h2>Avisos</h2>
+  <form method="post" action="/mantenimiento/avisos" class="form-col">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <div class="dos-columnas">
+      <fieldset class="form-col opciones-canal">
+        <legend>Correo</legend>
+        <label class="marcar"><input type="checkbox" name="correo_habilitado" value="si"{% if correo.habilitado %} checked{% endif %}> Enviar avisos por correo</label>
+        <label>Servidor SMTP <input name="correo_servidor" value="{{ correo.servidor|default('') }}" maxlength="253" placeholder="smtp.ejemplo.com"></label>
+        <div class="campos">
+          <label>Puerto <input name="correo_puerto" type="number" min="1" max="65535" value="{{ correo.puerto|default(587) }}"></label>
+          <label>Conexión <select name="correo_modo"><option value="starttls"{% if correo.modo != 'ssl' %} selected{% endif %}>STARTTLS</option><option value="ssl"{% if correo.modo == 'ssl' %} selected{% endif %}>TLS directo</option></select></label>
+        </div>
+        <label>Usuario SMTP <input name="correo_usuario" value="{{ correo.usuario|default('') }}" maxlength="256" autocomplete="off"></label>
+        <label>Contraseña SMTP <input name="correo_clave" type="password" maxlength="512" autocomplete="new-password" placeholder="{{ 'Guardada. Completá para reemplazarla.' if correo.clave_guardada else '' }}"></label>
+        <label>Remitente <input name="correo_desde" type="email" value="{{ correo.desde|default('') }}" maxlength="254"></label>
+        <label>Destinatarios separados por comas <input name="correo_para" value="{{ correo.para|default([])|join(', ') }}"></label>
+      </fieldset>
+      <fieldset class="form-col opciones-canal">
+        <legend>Telegram</legend>
+        <label class="marcar"><input type="checkbox" name="telegram_habilitado" value="si"{% if telegram.habilitado %} checked{% endif %}> Enviar avisos por Telegram</label>
+        <label>Token del bot <input name="telegram_token" type="password" maxlength="512" autocomplete="new-password" placeholder="{{ 'Guardado. Completá para reemplazarlo.' if telegram.token_guardado else '' }}"></label>
+        <label>Identificador del chat <input name="telegram_chat" value="{{ telegram.chat_id|default('') }}" maxlength="128"></label>
+      </fieldset>
+    </div>
+    <button class="boton primario">Guardar avisos</button>
+  </form>
+  <p>Guardá la configuración y enviá una prueba al destino elegido. Los canales habilitados reciben los avisos nuevos y las alertas que siguen abiertas. Al corregir un canal, se reintentan sus envíos pendientes.</p>
+  <form class="acciones" method="post" action="/mantenimiento/operaciones" data-operacion-form>
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}"><input type="hidden" name="nonce" value="{{ nonce }}">
+    <button class="boton" name="tipo" value="correo">Probar correo</button>
+    <button class="boton" name="tipo" value="telegram">Probar Telegram</button>
+  </form>
+  {% if errores_avisos %}<p class="estado alerta">{{ errores_avisos }} avisos agotaron sus reintentos. Revisá el canal y probá el envío.</p>{% endif %}
+</section>
+
+<section class="panel" id="respaldos">
+  <h2>Respaldos</h2>
+  <form method="post" action="/mantenimiento/respaldo" class="form-col">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Carpeta de destino en Central <input name="destino" value="{{ respaldo.destino|default('') }}" maxlength="1024" placeholder="/home/usuario/microgreen-respaldos"></label>
+    <label class="marcar"><input type="checkbox" name="habilitado" value="si"{% if respaldo.habilitado %} checked{% endif %}> Programar un respaldo diario a las 02.20, hora del servidor</label>
+    <button class="boton primario">Guardar respaldo</button>
+  </form>
+  {% if mismo_disco %}<p class="estado alerta">El destino está en el mismo disco que las capturas. Un destino en otro disco permite recuperar los datos ante una falla de almacenamiento.</p>{% endif %}
+  <p>Último respaldo completo <strong>{{ ultimo.name if ultimo else 'Pendiente' }}</strong></p>
+  <form class="acciones" method="post" action="/mantenimiento/operaciones" data-operacion-form>
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}"><input type="hidden" name="nonce" value="{{ nonce }}">
+    <button class="boton primario" name="tipo" value="respaldo"{% if not respaldo.destino %} disabled{% endif %}>Crear respaldo ahora</button>
+    <button class="boton" name="tipo" value="verificar"{% if not ultimo %} disabled{% endif %}>Verificar último respaldo</button>
+  </form>
+  <p class="muted">La verificación comprueba la lectura de la base y las huellas de los archivos. La prueba de restauración se realiza sobre una base separada.</p>
+</section>
+
+<section class="panel" id="operaciones">
+  <h2>Operaciones recientes</h2>
+  {% if seleccionado %}<p role="status" aria-live="polite" data-operacion="{{ seleccionado.id }}" data-estado="{{ seleccionado.estado }}">{{ seleccionado.mensaje }}</p>{% endif %}
+  <div class="tabla-wrap"><table>
+    <thead><tr><th>Fecha</th><th>Operación</th><th>Estado</th><th>Resultado</th></tr></thead>
+    <tbody>{% for t in trabajos %}<tr><td>{{ t.creada_en|fecha_local }}</td><td>{{ tipos[t.tipo] }}</td><td>{{ {'pendiente':'En espera', 'en_curso':'En curso', 'ok':'Terminada', 'error':'Revisar'}[t.estado] }}</td><td>{{ t.mensaje }}</td></tr>
+    {% else %}<tr><td colspan="4">Las operaciones aparecerán aquí cuando solicites una prueba o un respaldo.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+<script defer src="/static/mantenimiento.js"></script>
+{% endblock %}

@@ -21,6 +21,10 @@ def alta_disponible(nodo, ahora):
     return bool(nodo["enlazado"] and nodo["alta_en"] and ahora - nodo["alta_en"] <= ATRASO_ALTA)
 
 
+def captura_disponible(nodo, ahora):
+    return alta_disponible(nodo, ahora) and "capturar" in nodo.get("reporte", {}).get("capacidades", [])
+
+
 def ficha_camara(camara, sitio_zona, ahora):
     ultima = camara["capturada_en"]
     if not camara["activa"]:

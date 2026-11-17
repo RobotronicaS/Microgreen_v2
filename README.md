@@ -1,6 +1,6 @@
 # Microgreen2
 
-Microgreen2 usa **MicroGreenVision Central v0.6** y una Raspberry Pi Zero para tomar fotos de un invernáculo. En esta práctica vas a agregar **una cámara**, tomar su primera foto y verla en el historial.
+Microgreen2 usa **MicroGreenVision Central v0.7** y una Raspberry Pi Zero para tomar fotos de un invernáculo. En esta práctica vas a agregar **una cámara**, tomar su primera foto y verla en el historial.
 
 | Equipo | Qué hace |
 | --- | --- |
@@ -52,6 +52,16 @@ Para ver cómo se prepara la cuenta o el perfil, consultá las guías de [Tapo](
 3. Cuando aparezca la miniatura, abrí **Ver historial**. Verificá que el código del puesto y la fecha correspondan a tu prueba.
 
 La práctica queda completa cuando podés mostrar **el invernáculo, el puesto y una foto en el historial**. Anotá la hora de esa captura.
+
+## 5. Tomá otra foto desde el panel
+
+1. Abrí **Ver historial** en tu cámara.
+2. Pulsá **Tomar foto ahora** y esperá el resultado. La Zero usa el acceso a la cámara que ya tiene guardado.
+3. Cuando Central reciba la foto, la página muestra su miniatura y el enlace al historial. Si se corta la conexión, podés actualizar la página para consultar el mismo pedido.
+
+El botón requiere permiso **Técnico** y una Zero conectada con el agente v0.7. El docente puede actualizarla desde **Equipos Zero → Configurar Zero**. Los agentes anteriores siguen enviando sus capturas programadas.
+
+La guía de [operación de Central](docs/operacion.md) explica el inicio, los avisos por correo o Telegram y los respaldos que configura el administrador.
 
 ## Si te trabás
 

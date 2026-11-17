@@ -141,7 +141,7 @@ def informe(lista, envio):
             camaras[camara] = ultimo if ultimo in ("ok", "error", "pausada") else "sin_configurar"
     antigua = datetime.strptime(lista[0].name, "%Y%m%dT%H%M%S_%fZ.jpg").replace(tzinfo=timezone.utc).isoformat() if lista else None
     return {"libres_bytes": shutil.disk_usage(RAIZ).free, "pendientes": len(lista),
-            "mas_antigua": antigua, "camaras": camaras, "envio": envio}
+            "mas_antigua": antigua, "camaras": camaras, "envio": envio, "capacidades": ["capturar"]}
 
 
 def entregar_jpg(datos, foto):

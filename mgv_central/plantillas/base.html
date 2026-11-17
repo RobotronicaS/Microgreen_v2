@@ -14,7 +14,7 @@
     {% if usuario %}
     <nav aria-label="Secciones">
       <a href="/">Invernáculos</a><a href="/equipos-zero"{% if request.url.path == '/equipos-zero' %} aria-current="page"{% endif %}>Equipos Zero</a><a href="/alertas">Alertas</a><a href="/supervisor"{% if request.url.path in ('/supervisor', '/diagnostico') %} aria-current="page"{% endif %}>Supervisor</a>
-      <a href="/trabajos">Procesamiento</a>{% if usuario.administrador %}<a href="/gestion">Administración</a>{% endif %}
+      <a href="/trabajos">Procesamiento</a>{% if usuario.administrador %}<a href="/mantenimiento">Avisos y respaldos</a><a href="/gestion">Administración</a>{% endif %}
     </nav>
     <div class="sesion">
       <a href="/cuenta">{{ usuario.nombre }}</a>

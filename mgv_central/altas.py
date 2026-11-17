@@ -20,7 +20,7 @@ from .dominio import PUESTOS, identificador, texto
 from .gestion import registrar_origenes
 from .ingesta import guardar_archivo
 from .receptor import autenticar, json_limitado, nombre_jpg
-from .resumen import alta_disponible
+from .resumen import alta_disponible, captura_disponible
 from .web import datos_formulario, fila, pagina, sitio
 
 rutas = APIRouter()
@@ -189,32 +189,41 @@ def solicitar(peticion: Request, vivero: str, datos: FormData = Depends(datos_fo
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, vivero, editar=True, formulario=datos)
         tipo = datos.get("accion")
-        if tipo not in ("buscar", "agregar"):
-            raise ValueError("Elegí buscar o agregar una cámara.")
+        if tipo not in ("buscar", "agregar", "capturar"):
+            raise ValueError("Elegí buscar, agregar o tomar una foto.")
         nodo = identificador(datos.get("nodo", ""))
-        camara = identificador(datos.get("camara", "")) if tipo == "agregar" else None
-        perfil = perfil_camara(datos) if camara else None
-        nombre = texto(datos.get("nombre", ""), 80) if camara else ""
+        camara = identificador(datos.get("camara", "")) if tipo != "buscar" else None
+        perfil = perfil_camara(datos) if tipo == "agregar" else None
+        nombre = texto(datos.get("nombre", ""), 80) if tipo == "agregar" else ""
         alta = secrets.token_hex(16)
         guardado = False
         vencer(conexion)
         try:
             with conexion.transaction():
                 conexion.execute("SELECT id FROM viveros WHERE id = %s FOR UPDATE", (vivero,))
-                equipo = fila(conexion, """SELECT alta_en, token_sha IS NOT NULL AS enlazado
+                equipo = fila(conexion, """SELECT alta_en, reporte, token_sha IS NOT NULL AS enlazado
                     FROM nodos WHERE vivero_id = %s AND id = %s""", (vivero, nodo), "Zero desconocida.")
                 if not alta_disponible(equipo, datetime.now(UTC)):
-                    raise HTTPException(409, "La Zero necesita estar conectada con el agente v0.4.")
-                if conexion.execute(
-                    """SELECT 1 FROM altas_camara WHERE vivero_id = %s AND (nodo_id = %s OR camara_id = %s)
+                    raise HTTPException(409, "La Zero necesita estar conectada. Revisá su ficha en Equipos Zero.")
+                if tipo == "capturar" and not captura_disponible(equipo, datetime.now(UTC)):
+                    raise HTTPException(409, "Actualizá la Zero desde Configurar Zero para tomar fotos desde Central.")
+                abierta = conexion.execute(
+                    """SELECT id, tipo, camara_id FROM altas_camara WHERE vivero_id = %s AND (nodo_id = %s OR camara_id = %s)
                     AND estado IN ('pendiente', 'en_curso')""", (vivero, nodo, camara),
-                ).fetchone():
+                ).fetchone()
+                if abierta:
+                    if tipo == "capturar" and abierta["tipo"] == tipo and abierta["camara_id"] == camara:
+                        return {"id": abierta["id"]}
                     raise HTTPException(409, "Ya hay una solicitud en curso para esta Zero o puesto.")
                 hilera = ""
-                if camara:
+                if tipo == "agregar":
                     nombre, hilera = datos_puesto(conexion, vivero, nodo, camara, nombre)
                     guardar_archivo(archivo_perfil(alta), json.dumps(perfil).encode("utf-8"))
                     guardado = True
+                elif tipo == "capturar":
+                    puesto = fila(conexion, "SELECT nombre, hilera FROM camaras WHERE vivero_id = %s AND id = %s AND nodo_id = %s",
+                                  (vivero, camara, nodo), "La cámara no pertenece a esta Zero.")
+                    nombre, hilera = puesto["nombre"], puesto["hilera"]
                 conexion.execute(
                     """INSERT INTO altas_camara (id, vivero_id, nodo_id, camara_id, solicitante, tipo, nombre, hilera)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
@@ -237,7 +246,7 @@ def leer_alta(peticion: Request, vivero: str, alta: str):
         if estado in ABIERTA and registro["vence_en"] <= datetime.now(UTC):
             estado, resultado = "error", {"mensaje": VENCIDA}
         respuesta = {"tipo": registro["tipo"], "estado": estado, "nodo": registro["nodo_id"], **resultado}
-        if estado == "ok" and registro["tipo"] == "agregar":
+        if estado == "ok" and registro["tipo"] in ("agregar", "capturar"):
             camara = registro["camara_id"]
             foto = conexion.execute(
                 "SELECT id FROM capturas WHERE vivero_id = %s AND camara_id = %s AND capturada_en = %s",
@@ -355,7 +364,16 @@ def confirmar(config, peticion, vivero, nodo, alta_id, datos):
                     if not isinstance(foto, str):
                         raise ValueError("Nombre de la foto de prueba inválido.")
                     nombre_jpg(foto)
-                    if registrar_camara(conexion, alta, vivero, nodo):
+                    if alta["tipo"] == "capturar":
+                        registrada = conexion.execute(
+                            "SELECT 1 FROM camaras WHERE vivero_id = %s AND id = %s AND nodo_id = %s",
+                            (vivero, alta["camara_id"], nodo),
+                        ).fetchone()
+                        if registrada:
+                            auditar(conexion, {"id": alta["solicitante"]}, vivero, "tomar foto ahora", alta["camara_id"])
+                    else:
+                        registrada = registrar_camara(conexion, alta, vivero, nodo)
+                    if registrada:
                         estado, resultado = "ok", {"foto": foto}
                     else:
                         estado, resultado = "error", {"mensaje": "El puesto se ocupó durante la prueba. Elegí otro."}

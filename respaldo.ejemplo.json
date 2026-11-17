@@ -1,3 +1,4 @@
 {
-  "destino": "/mnt/respaldo/microgreenvision"
+  "destino": "/mnt/respaldo/microgreenvision",
+  "habilitado": true
 }

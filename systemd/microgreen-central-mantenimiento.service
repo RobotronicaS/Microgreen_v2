@@ -1,0 +1,11 @@
+[Unit]
+Description=MicroGreenVision Central · avisos de prueba y respaldos
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/MicroGreenVision_Central
+ExecStart=/usr/bin/python3 -m mgv_central mantenimiento
+Nice=15
+TimeoutStartSec=8h
+UMask=0077
+NoNewPrivileges=true

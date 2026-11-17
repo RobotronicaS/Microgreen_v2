@@ -6,6 +6,20 @@
     {% if usuario.administrador %}<a class="boton primario" href="/gestion#nuevo">Agregar invernáculo</a>{% endif %}
   </div>
 </div>
+<section class="panel inicio-operacion">
+  <div>
+    <h2>{{ 'Hay incidencias para revisar' if incidencias or con_avisos else 'Estado de los invernáculos' }}</h2>
+    <p>{{ incidencias }} avisos abiertos · {{ con_avisos }} invernáculos requieren atención</p>
+  </div>
+  <div class="acciones">
+    <a class="boton" href="/supervisor">Revisar estado</a>
+    <a class="boton primario" href="/equipos-zero">Equipos y cámaras</a>
+    {% if usuario.administrador %}
+    <a class="boton" href="/gestion#cuentas">Agregar compañero</a>
+    <a class="boton" href="/mantenimiento">Avisos y respaldos</a>
+    {% endif %}
+  </div>
+</section>
 <div class="indicadores">
   <div><span>Cámaras al día</span><strong>{{ totales.aldia }} <small>/ {{ totales.activas }} activas</small></strong></div>
   <div><span>JPG recibidos hoy</span><strong>{{ totales.recibidas }} <small>/ {{ totales.esperadas }} esperados</small></strong></div>

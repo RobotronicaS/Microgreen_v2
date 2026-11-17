@@ -269,3 +269,24 @@ CREATE UNIQUE INDEX IF NOT EXISTS vinculacion_zero_abierta ON vinculaciones_zero
     WHERE estado IN ('pendiente', 'en_curso');
 CREATE UNIQUE INDEX IF NOT EXISTS vinculacion_host_abierta ON vinculaciones_zero (host, puerto)
     WHERE estado IN ('pendiente', 'en_curso');
+
+ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_tipo_check;
+ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_tipo_check CHECK (tipo IN ('buscar', 'agregar', 'capturar'));
+ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_check;
+ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_check
+    CHECK ((tipo IN ('agregar', 'capturar')) = (camara_id IS NOT NULL));
+
+CREATE TABLE IF NOT EXISTS mantenimiento (
+    id text PRIMARY KEY,
+    solicitante bigint REFERENCES usuarios(id),
+    tipo text NOT NULL CHECK (tipo IN ('respaldo', 'verificar', 'correo', 'telegram')),
+    clave text UNIQUE,
+    estado text NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'en_curso', 'ok', 'error')),
+    mensaje text NOT NULL DEFAULT 'Esperando al servicio de mantenimiento.',
+    resultado jsonb NOT NULL DEFAULT '{}',
+    creada_en timestamptz NOT NULL DEFAULT now(),
+    inicio_en timestamptz,
+    terminada_en timestamptz
+);
+CREATE UNIQUE INDEX IF NOT EXISTS mantenimiento_tipo_abierto ON mantenimiento (tipo)
+    WHERE estado IN ('pendiente', 'en_curso');

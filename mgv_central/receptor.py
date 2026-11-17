@@ -185,6 +185,10 @@ def informe_estado(conexion, vivero, nodo, datos):
         if clave in permitidas and valor in ("ok", "error", "sin_configurar", "pausada")
     }
     reporte["envio"] = "error" if datos.get("envio") == "error" else "ok"
+    capacidades = datos.get("capacidades", [])
+    if not isinstance(capacidades, list) or len(capacidades) > 8:
+        raise ValueError("Capacidades de la Zero inválidas.")
+    reporte["capacidades"] = ["capturar"] if "capturar" in capacidades else []
     conexion.execute(
         "UPDATE nodos SET ultimo_contacto = now(), reporte = %s WHERE vivero_id = %s AND id = %s",
         (Jsonb(reporte), vivero, nodo),

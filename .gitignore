@@ -17,6 +17,8 @@ id_ed25519
 id_rsa
 .ssh/
 .altas-camara/
+.respaldo.lock
+.opciones-*
 .pruebas-camara/
 
 # Capturas, colas y respaldos

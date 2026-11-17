@@ -23,7 +23,7 @@
 </div>
 <div class="dos-columnas">
 <section class="panel">
-  <h2>Nueva cuenta</h2>
+  <h2 id="cuentas">Nueva cuenta</h2>
   <form class="form-col" method="post" action="/gestion/usuarios">
     <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
     <label>Usuario <input name="nombre" minlength="3" maxlength="40" required></label>

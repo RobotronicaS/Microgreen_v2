@@ -234,3 +234,17 @@ code { white-space: normal; overflow-wrap: anywhere; }
 .equipo-acciones p { margin: 0; }
 .pasos-credencial { padding-left: 1.3rem; line-height: 1.55; }
 .pasos-credencial li + li { margin-top: .45rem; }
+
+.inicio-operacion { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.inicio-operacion h2, .inicio-operacion p { margin: 0; }
+.inicio-operacion p { margin-top: .4rem; }
+.opciones-canal { border: 1px solid var(--borde); border-radius: 8px; padding: 1rem; min-width: 0; }
+.opciones-canal legend { font-weight: 650; padding-inline: .3rem; }
+#avisos, #respaldos, #operaciones { margin-block: 1rem; }
+.captura-manual { margin-bottom: 1rem; }
+.captura-manual img { width: min(100%, 400px); display: block; margin-top: .7rem; border-radius: 8px; }
+@media (max-width: 700px) {
+  .inicio-operacion .acciones { width: 100%; }
+  .inicio-operacion .boton { flex: 1 1 10rem; }
+  #avisos .dos-columnas { grid-template-columns: minmax(0, 1fr); }
+}

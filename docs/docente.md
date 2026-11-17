@@ -15,7 +15,7 @@ Para compartir un repositorio privado, entrá a **Settings → Collaborators →
 2. En la ficha nueva, pulsá **Vincular Zero**. Completá su dirección, usuario y contraseña Linux y pulsá **Conectar e instalar**. Seguí los [pasos de vinculación](instalacion.md#4-vinculá-la-zero-desde-la-página).
 3. Actualizá el panel. Cuando la Zero figure **Lista para agregar cámaras**, abrí **Agregar cámara** desde su ficha. Los puestos vacíos de la plantilla también están disponibles. Se asignan a esta Zero cuando la prueba toma su primera foto.
 
-Para actualizar un Central existente, descargá el ZIP actual y ejecutá de nuevo [el instalador de Central](instalacion.md#2-copiá-el-zip-e-instalá-central). Los equipos enlazados con el agente v0.4 ya son compatibles.
+Para actualizar un Central existente, descargá el ZIP actual y ejecutá de nuevo [el instalador de Central](instalacion.md#2-copiá-el-zip-e-instalá-central). Los equipos enlazados con agentes anteriores siguen enviando sus capturas. Para habilitar **Tomar foto ahora**, actualizá cada Zero desde **Equipos Zero → Configurar Zero → Conectar e instalar**.
 
 ## 3. Prepará su cuenta en Central
 
@@ -28,9 +28,15 @@ Verificá que Central abra con su [enlace privado de Tailscale](instalacion.md#3
 
 El estudiante completa la guía del README y muestra la primera foto de su puesto en **Ver historial**.
 
+## 4. Prepará los avisos y respaldos
+
+En **Avisos y respaldos**, el administrador puede guardar y probar los canales de notificación, elegir la carpeta de respaldo y activar la copia diaria. Seguí la [guía de operación](operacion.md) para comprobar la primera copia y su integridad.
+
 ## Verificación técnica opcional
 
 El docente puede ejecutar la prueba automatizada desde **Central**, con el servicio y PostgreSQL ya preparados. Usa una base temporal, genera fotos de prueba y verifica permisos y altas. El estudiante puede completar la práctica con una sola cámara.
+
+La simulación de 150 cámaras comprueba el funcionamiento del programa. La capacidad del servidor y de la red se debe medir con las cámaras y las frecuencias de captura de la instalación real.
 
 ~~~bash
 sudo apt install -y python3-httpx

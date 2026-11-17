@@ -34,9 +34,11 @@ for unidad in "$unidades"/microgreen-central-*; do
 done
 
 temporizadores=(microgreen-central-importar.timer microgreen-central-analisis.timer
-    microgreen-central-media.timer microgreen-central-alertas.timer)
+    microgreen-central-media.timer microgreen-central-alertas.timer microgreen-central-mantenimiento.timer
+    microgreen-central-respaldo.timer)
 servicios=(microgreen-central-importar.service microgreen-central-analisis.service
-    microgreen-central-media.service microgreen-central-alertas.service microgreen-central-panel.service)
+    microgreen-central-media.service microgreen-central-alertas.service microgreen-central-mantenimiento.service
+    microgreen-central-respaldo.service microgreen-central-panel.service)
 activas=()
 for unidad in microgreen-central-panel.service "${temporizadores[@]}"; do
     if systemctl --user is-active --quiet "$unidad"; then activas+=("$unidad"); fi
@@ -101,14 +103,14 @@ from urllib.request import urlopen
 for _ in range(20):
     try:
         with urlopen("http://127.0.0.1:8766/salud", timeout=2) as respuesta:
-            if json.load(respuesta) == {"estado": "ok", "version": "0.6"}:
-                print("Central v0.6 responde en 127.0.0.1:8766.")
+            if json.load(respuesta) == {"estado": "ok", "version": "0.7"}:
+                print("Central v0.7 responde en 127.0.0.1:8766.")
                 break
     except (OSError, URLError, ValueError):
         pass
     time.sleep(1)
 else:
-    raise SystemExit("Central v0.6 no respondió en 8766. Revisá microgreen-central-panel.service.")
+    raise SystemExit("Central v0.7 no respondió en 8766. Revisá microgreen-central-panel.service.")
 PY
 trap - EXIT
 printf 'Copia previa en %s\n' "$reserva"

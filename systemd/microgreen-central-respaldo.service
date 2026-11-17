@@ -4,7 +4,7 @@ Description=MicroGreenVision Central · respaldo
 [Service]
 Type=oneshot
 WorkingDirectory=%h/MicroGreenVision_Central
-ExecStart=/usr/bin/python3 -m mgv_central respaldar
+ExecStart=/usr/bin/python3 -m mgv_central respaldo-programado
 Nice=15
 TimeoutStartSec=8h
 UMask=0077

@@ -11,6 +11,7 @@ from .avisos import supervisar
 from .base import conectar
 from .configuracion import cargar_configuracion
 from .ingesta import importar
+from .mantenimiento import procesar_mantenimiento, programar_respaldo
 from .preparar import preparar
 from .procesos import procesar
 from .respaldo import respaldar, dump_base, verificar
@@ -20,7 +21,7 @@ def main():
     parser = argparse.ArgumentParser(description="MicroGreenVision Central")
     parser.add_argument("accion", choices=(
         "preparar", "importar", "analizar", "media", "alertas", "clave-admin",
-        "respaldar", "volcar-base", "verificar",
+        "respaldar", "volcar-base", "verificar", "mantenimiento", "respaldo-programado",
     ))
     parser.add_argument("--destino")
     parser.add_argument("--archivo")
@@ -51,6 +52,10 @@ def main():
             print(f"Usuario admin · nueva contraseña {clave}")
         elif opciones.accion == "respaldar":
             respaldar(config, opciones.destino)
+        elif opciones.accion == "mantenimiento":
+            procesar_mantenimiento(config)
+        elif opciones.accion == "respaldo-programado":
+            programar_respaldo(config)
         elif opciones.accion == "volcar-base":
             if not opciones.destino:
                 raise ValueError("Indicá el archivo de destino con --destino.")

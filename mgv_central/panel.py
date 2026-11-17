@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 import secrets
 import shutil
@@ -20,8 +20,9 @@ from .configuracion import cargar_configuracion
 from .cultivos import rutas as cultivos
 from .dominio import rango_local, zona
 from .gestion import rutas as gestion
+from .mantenimiento import rutas as mantenimiento
 from .receptor import api
-from .resumen import resumen_camaras, viveros_visibles
+from .resumen import captura_disponible, resumen_camaras, viveros_visibles
 from .supervisor import estado_supervisor
 from .vinculacion import rutas as vinculacion
 from .web import datos_formulario, fila, foto_ruta, local_hoy, pagina, puesto, sitio, volver
@@ -33,6 +34,7 @@ app.include_router(altas)
 app.include_router(gestion)
 app.include_router(cultivos)
 app.include_router(vinculacion)
+app.include_router(mantenimiento)
 POR_PAGINA = 48
 
 
@@ -83,7 +85,7 @@ async def error_base(peticion, error):
 def salud():
     with conectar(cargar_configuracion()) as conexion:
         conexion.execute("SELECT 1")
-    return {"estado": "ok", "version": "0.6"}
+    return {"estado": "ok", "version": "0.7"}
 
 
 @app.get("/ingresar")
@@ -142,13 +144,18 @@ def inicio(peticion: Request, atrasadas: bool = False):
             ([v["id"] for v in sitios],),
         ).fetchall()
         importador = conexion.execute("SELECT * FROM estado_importador WHERE id").fetchone()
+        avisos_globales = conexion.execute(
+            "SELECT count(*) AS n FROM alertas WHERE vivero_id IS NULL AND cerrada_en IS NULL",
+        ).fetchone()["n"] if usuario["administrador"] else 0
     cantidades = {a["vivero_id"]: a["cantidad"] for a in alertas}
     for sitio_actual in sitios:
         sitio_actual["alertas"] = cantidades.get(sitio_actual["id"], 0)
     totales = {clave: sum(v[clave] for v in sitios) for clave in ("activas", "aldia", "recibidas", "esperadas")}
     visibles = [s for s in sitios if s["alertas"] or s["atrasadas"]] if atrasadas else sitios
     return pagina(peticion, "inicio.html", usuario, sitios=visibles, cantidad=len(sitios),
-                  totales=totales, importador=importador, atrasadas=atrasadas, titulo="Invernáculos")
+                  totales=totales, importador=importador, atrasadas=atrasadas,
+                  incidencias=sum(cantidades.values()) + avisos_globales,
+                  con_avisos=sum(bool(s["alertas"] or s["atrasadas"]) for s in sitios), titulo="Invernáculos")
 
 
 @app.get("/viveros/{vivero_id}", name="vivero")
@@ -172,7 +179,7 @@ def vivero(peticion: Request, vivero_id: str):
 
 @app.get("/viveros/{vivero_id}/camaras/{camara_id}", name="historial")
 def historial(peticion: Request, vivero_id: str, camara_id: str, fecha: str = "", lote: str = "",
-              pagina_numero: int = 1):
+              pagina_numero: int = 1, captura: str = ""):
     if not 1 <= pagina_numero <= 100_000:
         raise ValueError("Número de página inválido.")
     lote = int(lote) if lote else None
@@ -181,6 +188,13 @@ def historial(peticion: Request, vivero_id: str, camara_id: str, fecha: str = ""
         usuario = exigir(conexion, peticion, vivero_id)
         vivero_actual = sitio(conexion, vivero_id)
         camara = puesto(conexion, vivero_id, camara_id)
+        equipo_captura = fila(conexion, """SELECT id, reporte, alta_en, token_sha IS NOT NULL AS enlazado
+            FROM nodos WHERE vivero_id = %s AND id = %s""", (vivero_id, camara["nodo_id"]), "Zero desconocida.")
+        puede_capturar = captura_disponible(equipo_captura, datetime.now(UTC))
+        solicitud_captura = conexion.execute(
+            """SELECT id FROM altas_camara WHERE id = %s AND vivero_id = %s
+            AND camara_id = %s AND tipo = 'capturar'""", (captura, vivero_id, camara_id),
+        ).fetchone() if len(captura) == 32 else None
         hoy = local_hoy(vivero_actual["zona"])
         lotes = conexion.execute(
             "SELECT * FROM lotes WHERE vivero_id = %s AND camara_id = %s ORDER BY siembra DESC",
@@ -211,6 +225,7 @@ def historial(peticion: Request, vivero_id: str, camara_id: str, fecha: str = ""
     return pagina(peticion, "historial.html", usuario, sitio=vivero_actual, camara=camara, fotos=fotos[:POR_PAGINA],
                   lotes=lotes, lote=lote, fecha=fecha, hoy=hoy, pagina=pagina_numero,
                   anterior_dia=anterior_dia, siguiente_dia=siguiente_dia,
+                  puede_capturar=puede_capturar, solicitud_captura=solicitud_captura["id"] if solicitud_captura else "",
                   siguiente=len(fotos) > POR_PAGINA, titulo=camara["nombre"])
 
 

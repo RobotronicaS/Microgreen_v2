@@ -86,7 +86,7 @@ def finalizar(raiz, peticion, diario, operacion):
     prueba = detalle_local(raiz / ".pruebas-camara" / alta, camara["id"], nombre)
     cola = detalle_local(raiz / "pendientes", camara["id"], nombre)
     try:
-        config = configurar(raiz, camara)
+        config = configurar(raiz, camara) if operacion.get("tipo", "agregar") == "agregar" else None
     except ValueError as error:
         confirmar(peticion, alta, {"ok": False, "mensaje": str(error)})
         eliminar_prueba(prueba)
@@ -96,7 +96,8 @@ def finalizar(raiz, peticion, diario, operacion):
         eliminar_prueba(prueba)
         diario.unlink(missing_ok=True)
         return
-    guardar_json(raiz / "config.json", config)
+    if config is not None:
+        guardar_json(raiz / "config.json", config)
     if prueba.is_file():
         cola.parent.mkdir(parents=True, exist_ok=True)
         prueba.replace(cola)
@@ -115,7 +116,7 @@ def finalizar(raiz, peticion, diario, operacion):
             temporal.unlink(missing_ok=True)
         estado = leer_estado(raiz)
         estado["camaras"].setdefault(camara["id"], {}).update(
-            estado="ok", hora=fecha_utc(), detalle="JPG de alta guardado.", ultimo_ok=fecha_utc(),
+            estado="ok", hora=fecha_utc(), detalle="Captura solicitada guardada.", ultimo_ok=fecha_utc(),
         )
         guardar_estado(raiz, estado)
     diario.unlink(missing_ok=True)
@@ -175,3 +176,31 @@ def atender_altas(raiz, peticion):
         return
     if solicitud["tipo"] == "agregar":
         return probar(raiz, peticion, diario, solicitud)
+    if solicitud["tipo"] == "capturar":
+        return capturar_actual(raiz, peticion, diario, solicitud)
+
+
+def capturar_actual(raiz, peticion, diario, solicitud):
+    codigo = solicitud["camara_id"]
+    if not ID_CAMARA.fullmatch(codigo):
+        raise ValueError("Puesto inválido.")
+    with bloquear_ciclo(raiz):
+        config = cargar_config(raiz / "config.json")
+        camara = next((c for c in config["camaras"] if c["id"] == codigo), None)
+        if camara is None:
+            confirmar(peticion, solicitud["id"], {"ok": False, "mensaje": "La cámara necesita configuración en esta Zero."})
+            return
+        if shutil.disk_usage(raiz).free < MIN_FREE_BYTES:
+            confirmar(peticion, solicitud["id"], {"ok": False, "mensaje": "La Zero tiene menos de 256 MiB libres."})
+            return
+        carpeta = raiz / ".pruebas-camara" / solicitud["id"]
+        foto = next((p for p in carpeta.glob(f"{codigo}/*/*.jpg")
+                     if p.is_file() and not p.is_symlink() and NOMBRE_JPG.fullmatch(p.name)), None)
+        if foto is None:
+            foto, detalle = capturar(camara, carpeta)
+            if foto is None:
+                confirmar(peticion, solicitud["id"], {"ok": False, "mensaje": detalle})
+                return
+        operacion = {"tipo": "capturar", "id": solicitud["id"], "camara": {"id": codigo}, "foto": foto.name}
+        guardar_json(diario, operacion)
+        return finalizar(raiz, peticion, diario, operacion)
