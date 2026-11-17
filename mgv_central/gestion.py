@@ -21,6 +21,11 @@ def gestion(peticion: Request):
         usuario = exigir(conexion, peticion, admin=True)
         sitios = conexion.execute("SELECT * FROM viveros ORDER BY nombre").fetchall()
         cuentas = conexion.execute("SELECT id, nombre, activo, administrador FROM usuarios ORDER BY nombre").fetchall()
+        solicitudes = conexion.execute(
+            """SELECT id, nombre, persona, creada_en FROM solicitudes_acceso
+            WHERE estado = 'pendiente' ORDER BY creada_en LIMIT 50""",
+        ).fetchall()
+        pendientes = conexion.execute("SELECT count(*) AS n FROM solicitudes_acceso WHERE estado = 'pendiente'").fetchone()["n"]
         permisos = conexion.execute(
             """SELECT p.*, u.nombre AS usuario, v.nombre AS sitio FROM permisos p
             JOIN usuarios u ON u.id = p.usuario_id JOIN viveros v ON v.id = p.vivero_id
@@ -31,7 +36,7 @@ def gestion(peticion: Request):
             ORDER BY a.id DESC LIMIT 40""",
         ).fetchall()
     return pagina(peticion, "gestion.html", usuario, sitios=sitios, cuentas=cuentas, permisos=permisos,
-                  historial=historial, titulo="Administración")
+                  historial=historial, solicitudes=solicitudes, pendientes=pendientes, titulo="Administración")
 
 
 def plantilla_puestos(conexion, vivero, nodo):

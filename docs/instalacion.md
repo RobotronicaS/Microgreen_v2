@@ -48,7 +48,7 @@ En la primera instalación, anotá la contraseña que aparece en **Primer acceso
 curl -fsS http://127.0.0.1:8766/salud
 ~~~
 
-El resultado esperado es `{"estado":"ok","version":"0.7"}`. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**. Guardá la contraseña de la instalación para el primer acceso por HTTPS.
+El resultado esperado es `{"estado":"ok","version":"0.8.0"}`. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**. Guardá la contraseña de la instalación para el primer acceso por HTTPS.
 
 ## 3. Configurá el acceso privado a Central
 
@@ -76,7 +76,7 @@ Si aparece un enlace para habilitar HTTPS en la red, seguí ese enlace y repetí
 2. Ingresá con tu cuenta de Central. En el primer acceso de una instalación nueva, usá **admin** y la contraseña que imprimió el instalador. Las actualizaciones conservan la contraseña anterior. En **Mi cuenta** podés cambiarla.
 3. Guardá el enlace como **MicroGreenVision Central** en favoritos. Usá la misma dirección en el campo `url` de cada Zero vinculada a este servidor y autorizá su acceso al puerto **8766** en Tailscale.
 
-Para comprobar el enlace, agregá `/salud` a la dirección HTTPS. El navegador debería mostrar `{"estado":"ok","version":"0.7"}`.
+Para comprobar el enlace, agregá `/salud` a la dirección HTTPS. El navegador debería mostrar `{"estado":"ok","version":"0.8.0"}`.
 
 ### Recuperá el acceso de admin
 

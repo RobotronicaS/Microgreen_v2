@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block clase_main %}ingreso{% endblock %}
+{% block contenido %}
+<section class="panel">
+  <h1>Registrarse</h1>
+  <p class="muted">Creá tu cuenta para visualizar cámaras, fotografías e historial. El administrador autorizará los invernáculos a los que podrás acceder.</p>
+  {% if error %}<p class="aviso" role="alert">{{ error }}</p>{% endif %}
+  <form class="form-col" method="post" action="/registrarse">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label>Nombre y apellido <input name="persona" value="{{ persona }}" autocomplete="name" required maxlength="80" autofocus></label>
+    <label>Usuario <input name="usuario" value="{{ nombre }}" autocomplete="username" required minlength="3" maxlength="40" pattern="[a-z0-9][a-z0-9._-]{2,39}" autocapitalize="none" spellcheck="false"></label>
+    <p class="muted">Usá de 3 a 40 letras minúsculas, números, puntos, guiones o guiones bajos.</p>
+    <label>Contraseña <input type="password" name="clave" autocomplete="new-password" required minlength="12" maxlength="128"></label>
+    <label>Repetir contraseña <input type="password" name="confirmar" autocomplete="new-password" required minlength="12" maxlength="128"></label>
+    <p class="muted">La contraseña debe tener al menos 12 caracteres. El acceso será de Consulta.</p>
+    <button class="boton primario" type="submit">Registrarme</button>
+    <a class="boton" href="/ingresar">Ya tengo cuenta</a>
+  </form>
+</section>
+{% endblock %}

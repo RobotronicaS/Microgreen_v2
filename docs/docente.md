@@ -21,6 +21,8 @@ Para actualizar un Central existente, descargá el ZIP actual y ejecutá de nuev
 
 Verificá que Central abra con su [enlace privado de Tailscale](instalacion.md#3-configurá-el-acceso-privado-a-central). En el panel, ingresá como administrador.
 
+Si la persona sólo va a visualizar, pedile que use **Registrarse** en la pantalla de ingreso. Luego autorizá sus invernáculos desde **Administración → Registros pendientes**. Esa cuenta recibe permiso de Consulta. Para la práctica de agregar cámaras, prepará el permiso Técnico con los pasos siguientes.
+
 1. Abrí **Administración → Nueva cuenta**. Creá una cuenta para el estudiante, por ejemplo **estudiante**, con una contraseña inicial de al menos 12 caracteres. Dejá desmarcada la opción **Administrador de todos los sitios**.
 2. En **Permisos por sitio**, elegí su cuenta y el invernáculo asignado. Seleccioná **Técnico** y pulsá **Guardar acceso**.
 3. Confirmá que en **Equipos Zero** la Raspberry esté lista para agregar cámaras y que el puesto elegido esté libre. Si el agente o el servidor todavía requieren instalación, seguí la [instalación desde cero](instalacion.md).

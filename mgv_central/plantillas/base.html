@@ -10,7 +10,7 @@
 <body>
 <header class="cabecera">
   <div class="envoltura cabecera-interior">
-    <a href="/" class="marca">MicroGreenVision <span>Central</span></a>
+    <a href="/" class="marca">MicroGreenVision <span>Central</span> <small class="version-app">v{{ version }}</small></a>
     {% if usuario %}
     <nav aria-label="Secciones">
       <a href="/">Invernáculos</a><a href="/equipos-zero"{% if request.url.path == '/equipos-zero' %} aria-current="page"{% endif %}>Equipos Zero</a><a href="/alertas">Alertas</a><a href="/supervisor"{% if request.url.path in ('/supervisor', '/diagnostico') %} aria-current="page"{% endif %}>Supervisor</a>

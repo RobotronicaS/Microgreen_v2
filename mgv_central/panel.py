@@ -11,6 +11,7 @@ from psycopg.types.json import Jsonb
 from starlette.datastructures import FormData
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from . import __version__
 from .acceso import (
     COOKIE, COOKIE_INGRESO, SEGUNDOS_SESION, abrir_sesion, csrf_valido, exigir, usuario_actual,
 )
@@ -22,6 +23,7 @@ from .dominio import rango_local, zona
 from .gestion import rutas as gestion
 from .mantenimiento import rutas as mantenimiento
 from .receptor import api
+from .registro import rutas as registro
 from .resumen import captura_disponible, resumen_camaras, viveros_visibles
 from .supervisor import estado_supervisor
 from .vinculacion import rutas as vinculacion
@@ -35,6 +37,7 @@ app.include_router(gestion)
 app.include_router(cultivos)
 app.include_router(vinculacion)
 app.include_router(mantenimiento)
+app.include_router(registro)
 POR_PAGINA = 48
 
 
@@ -85,7 +88,7 @@ async def error_base(peticion, error):
 def salud():
     with conectar(cargar_configuracion()) as conexion:
         conexion.execute("SELECT 1")
-    return {"estado": "ok", "version": "0.7"}
+    return {"estado": "ok", "version": __version__}
 
 
 @app.get("/ingresar")
@@ -147,6 +150,9 @@ def inicio(peticion: Request, atrasadas: bool = False):
         avisos_globales = conexion.execute(
             "SELECT count(*) AS n FROM alertas WHERE vivero_id IS NULL AND cerrada_en IS NULL",
         ).fetchone()["n"] if usuario["administrador"] else 0
+        registros_pendientes = conexion.execute(
+            "SELECT count(*) AS n FROM solicitudes_acceso WHERE estado = 'pendiente'",
+        ).fetchone()["n"] if usuario["administrador"] else 0
     cantidades = {a["vivero_id"]: a["cantidad"] for a in alertas}
     for sitio_actual in sitios:
         sitio_actual["alertas"] = cantidades.get(sitio_actual["id"], 0)
@@ -155,7 +161,8 @@ def inicio(peticion: Request, atrasadas: bool = False):
     return pagina(peticion, "inicio.html", usuario, sitios=visibles, cantidad=len(sitios),
                   totales=totales, importador=importador, atrasadas=atrasadas,
                   incidencias=sum(cantidades.values()) + avisos_globales,
-                  con_avisos=sum(bool(s["alertas"] or s["atrasadas"]) for s in sitios), titulo="Invernáculos")
+                  con_avisos=sum(bool(s["alertas"] or s["atrasadas"]) for s in sitios),
+                  registros_pendientes=registros_pendientes, titulo="Invernáculos")
 
 
 @app.get("/viveros/{vivero_id}", name="vivero")

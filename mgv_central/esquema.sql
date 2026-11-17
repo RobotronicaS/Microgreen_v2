@@ -290,3 +290,21 @@ CREATE TABLE IF NOT EXISTS mantenimiento (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS mantenimiento_tipo_abierto ON mantenimiento (tipo)
     WHERE estado IN ('pendiente', 'en_curso');
+
+CREATE TABLE IF NOT EXISTS solicitudes_acceso (
+    id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre text NOT NULL,
+    persona text NOT NULL,
+    clave text,
+    estado text NOT NULL DEFAULT 'pendiente' CHECK (estado IN ('pendiente', 'aprobada', 'rechazada')),
+    creada_en timestamptz NOT NULL DEFAULT now(),
+    resuelta_en timestamptz,
+    resuelta_por bigint REFERENCES usuarios(id),
+    cuenta_id bigint REFERENCES usuarios(id),
+    CHECK ((estado = 'pendiente') = (clave IS NOT NULL)),
+    CHECK ((estado = 'pendiente') = (resuelta_en IS NULL)),
+    CHECK ((estado = 'pendiente') = (resuelta_por IS NULL)),
+    CHECK (estado <> 'aprobada' OR cuenta_id IS NOT NULL)
+);
+CREATE UNIQUE INDEX IF NOT EXISTS solicitud_acceso_pendiente ON solicitudes_acceso (nombre)
+    WHERE estado = 'pendiente';

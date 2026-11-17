@@ -103,14 +103,14 @@ from urllib.request import urlopen
 for _ in range(20):
     try:
         with urlopen("http://127.0.0.1:8766/salud", timeout=2) as respuesta:
-            if json.load(respuesta) == {"estado": "ok", "version": "0.7"}:
-                print("Central v0.7 responde en 127.0.0.1:8766.")
+            if json.load(respuesta) == {"estado": "ok", "version": "0.8.0"}:
+                print("Central v0.8.0 responde en 127.0.0.1:8766.")
                 break
     except (OSError, URLError, ValueError):
         pass
     time.sleep(1)
 else:
-    raise SystemExit("Central v0.7 no respondió en 8766. Revisá microgreen-central-panel.service.")
+    raise SystemExit("Central v0.8.0 no respondió en 8766. Revisá microgreen-central-panel.service.")
 PY
 trap - EXIT
 printf 'Copia previa en %s\n' "$reserva"

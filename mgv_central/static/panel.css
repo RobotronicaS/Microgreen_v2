@@ -243,6 +243,10 @@ code { white-space: normal; overflow-wrap: anywhere; }
 #avisos, #respaldos, #operaciones { margin-block: 1rem; }
 .captura-manual { margin-bottom: 1rem; }
 .captura-manual img { width: min(100%, 400px); display: block; margin-top: .7rem; border-radius: 8px; }
+.version-app { display: inline-block; padding: .15rem .4rem; border: 1px solid #66947a; border-radius: 5px; font-size: .65em; font-weight: 500; vertical-align: middle; letter-spacing: 0; }
+.marca { white-space: normal; }
+.solicitud-acceso { border-top: 1px solid var(--borde); padding-block: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.acceso-registro { margin-top: 1rem; }
 @media (max-width: 700px) {
   .inicio-operacion .acciones { width: 100%; }
   .inicio-operacion .boton { flex: 1 1 10rem; }

@@ -1,6 +1,31 @@
 {% extends "base.html" %}
 {% block contenido %}
 <h1>Administración</h1>
+<section class="panel" id="solicitudes">
+  <h2>Registros pendientes <span class="estado esperando">{{ pendientes }}</span></h2>
+  <p class="muted">Autorizá los invernáculos que cada persona puede visualizar. Las cuentas se crean con acceso de Consulta.</p>
+  {% if solicitudes %}
+  <div class="dos-columnas">
+    {% for s in solicitudes %}
+    <article class="solicitud-acceso">
+      <h3>{{ s.persona }}</h3><p class="muted">{{ s.nombre }} · {{ s.creada_en|fecha_local }}</p>
+      <form class="form-col" method="post" action="/gestion/solicitudes/{{ s.id }}">
+        <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+        <fieldset class="form-col opciones-canal"><legend>Puede visualizar</legend>
+          {% for sitio in sitios %}<label class="marcar"><input type="checkbox" name="viveros" value="{{ sitio.id }}"{% if sitios|length == 1 %} checked{% endif %}> {{ sitio.nombre }}</label>
+          {% else %}<p class="muted">Creá un invernáculo antes de autorizar esta cuenta.</p>{% endfor %}
+        </fieldset>
+        <div class="acciones">
+          <button class="boton primario" name="accion" value="aprobar"{% if not sitios %} disabled{% endif %}>Autorizar consulta</button>
+          <button class="boton" name="accion" value="rechazar">Rechazar</button>
+        </div>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+  {% if pendientes > solicitudes|length %}<p class="muted">Se muestran los primeros {{ solicitudes|length }} registros. Al resolverlos aparecerán los siguientes.</p>{% endif %}
+  {% else %}<p>No hay registros pendientes.</p>{% endif %}
+</section>
 <div class="dos-columnas">
 <section class="panel" id="nuevo">
   <h2>Nuevo invernáculo</h2>

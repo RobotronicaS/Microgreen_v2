@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from starlette.datastructures import FormData
 
+from . import __version__
 from .configuracion import cargar_configuracion
 from .dominio import zona
 
@@ -39,7 +40,8 @@ PLANTILLAS.env.filters.update(fecha_local=fecha_local, peso=peso)
 
 def pagina(peticion, plantilla, usuario=None, codigo=200, **contexto):
     return PLANTILLAS.TemplateResponse(
-        request=peticion, name=plantilla, status_code=codigo, context={"usuario": usuario, **contexto},
+        request=peticion, name=plantilla, status_code=codigo,
+        context={"usuario": usuario, "version": __version__, **contexto},
     )
 
 

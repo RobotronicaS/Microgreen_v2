@@ -1,0 +1,27 @@
+name: Pruebas de Central
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Preparar PostgreSQL y herramientas
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql rsync ffmpeg python3-venv
+      - name: Preparar Python
+        run: |
+          python3 -m venv .venv
+          .venv/bin/python -m pip install -r pruebas/requirements.txt
+      - name: Comprobar instaladores
+        run: bash -n instalar_central.sh zero/instalar_zero.sh zero/vincular_remoto.sh
+      - name: Ejecutar las pruebas con PostgreSQL aislado
+        env:
+          PYTHONPATH: .
+        run: .venv/bin/python -m pytest -q pruebas

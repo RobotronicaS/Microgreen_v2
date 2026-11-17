@@ -1,12 +1,14 @@
-# Operación de MicroGreenVision Central v0.7
+# Operación de MicroGreenVision Central v0.8.0
 
-Abrí el enlace HTTPS habitual con Tailscale conectado. Central conserva las cuentas y las cámaras al actualizarse. La instalación se comprueba en `/salud`, que debe mostrar `{"estado":"ok","version":"0.7"}`.
+Abrí el enlace HTTPS habitual con Tailscale conectado. Central conserva las cuentas y las cámaras al actualizarse. La instalación se comprueba en `/salud`, que debe mostrar `{"estado":"ok","version":"0.8.0"}`.
 
 ## 1. Revisá el inicio
 
 La primera pantalla reúne los avisos abiertos, los invernáculos que requieren atención y las cámaras al día. **Revisar estado** abre el supervisor. **Equipos y cámaras** abre las Raspberry Pi Zero y sus puestos.
 
-El administrador también tiene los accesos **Agregar compañero** y **Avisos y respaldos**. Cada compañero debe usar su propia cuenta. Desde Administración podés crearla como administradora o asignarle permisos por invernáculo.
+El encabezado muestra la versión activa del programa que está ejecutando Central. El mismo valor aparece en `/salud`.
+
+El administrador también tiene los accesos **Agregar compañero** y **Avisos y respaldos**. Cada compañero debe usar su propia cuenta. Los visitantes pueden pulsar **Registrarse** en la pantalla de ingreso. Desde **Administración → Registros pendientes** autorizás sus invernáculos con acceso de Consulta. La [guía de registro](registro.md) explica los pasos.
 
 ## 2. Habilitá la captura manual
 

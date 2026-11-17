@@ -16,6 +16,7 @@
     <a class="boton primario" href="/equipos-zero">Equipos y cámaras</a>
     {% if usuario.administrador %}
     <a class="boton" href="/gestion#cuentas">Agregar compañero</a>
+    {% if registros_pendientes %}<a class="boton" href="/gestion#solicitudes">Registros pendientes · {{ registros_pendientes }}</a>{% endif %}
     <a class="boton" href="/mantenimiento">Avisos y respaldos</a>
     {% endif %}
   </div>
