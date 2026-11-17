@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block contenido %}
-<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a> / Agregar cámara</p>
+<p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a>
+  {% if nodo_fijado %} / <a href="/equipos-zero?vivero={{ sitio.id }}#zero-{{ sitio.id }}.{{ nodo_fijado.id }}">{{ nodo_fijado.nombre }}</a>{% endif %} / Agregar cámara</p>
 <div class="titulo"><h1>Agregar cámara</h1></div>
 <form method="post" action="/api/viveros/{{ sitio.id }}/altas" class="alta-camara" data-alta data-api="/api/viveros/{{ sitio.id }}/altas" data-solicitud="{{ solicitud }}">
   <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
@@ -15,8 +16,8 @@
         {% endfor %}
       </select>
     </label>
-    <p class="aviso" data-alta-enlace hidden>Vinculá la Zero y actualizá su agente a v0.4 para agregar desde aquí.
-      <a href="/viveros/{{ sitio.id }}/ajustes">Revisar nodos</a>
+    <p class="aviso" data-alta-enlace hidden>La Zero tiene que figurar como lista para agregar cámaras.
+      <a href="/equipos-zero?vivero={{ sitio.id }}{% if nodo_fijado %}#zero-{{ sitio.id }}.{{ nodo_fijado.id }}{% endif %}">Equipos Zero</a>
     </p>
     <button type="button" class="boton" data-alta-buscar disabled>Buscar cámaras</button>
     <ul class="lista alta-equipos" data-alta-equipos hidden></ul>
@@ -30,7 +31,7 @@
         <select name="camara" required>
           {% for nodo, opciones in puestos.items() %}
           {% for p in opciones %}
-          <option value="{{ p.id }}" data-nodo="{{ nodo }}">{{ p.id }}{% if p.nombre != p.id %} · {{ p.nombre }}{% endif %}</option>
+          <option value="{{ p.id }}" data-nodo="{{ nodo }}">{{ p.id }}{% if p.nombre != p.id %} · {{ p.nombre }}{% endif %}{% if p.de_plantilla %} · libre de la plantilla{% endif %}</option>
           {% endfor %}
           {% endfor %}
         </select>

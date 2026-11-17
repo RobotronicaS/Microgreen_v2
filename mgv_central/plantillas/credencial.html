@@ -1,10 +1,18 @@
 {% extends "base.html" %}
 {% block contenido %}
-<p class="ruta"><a href="/viveros/{{ vivero }}/ajustes">Ajustes del invernáculo</a> / {{ nodo }}</p>
+<p class="ruta"><a href="{{ retorno }}">Equipos Zero</a> / {{ nombre }}</p>
 <section class="panel estrecho">
-  <h1>Credencial de {{ nodo }}</h1>
-  <p>Copiá este contenido a <code>central.json</code> en la Zero y completá la URL privada de Central.</p>
-  <label>Configuración del nodo <textarea id="credencial" rows="9" readonly spellcheck="false">{{ config }}</textarea></label>
-  <div class="acciones"><button class="boton primario" data-copiar="credencial">Copiar</button><a class="boton" href="/viveros/{{ vivero }}/ajustes">Volver</a></div>
+  <h1>Vincular {{ nombre }}</h1>
+  <ol class="pasos-credencial">
+    <li>Copiá el JSON a <code>~/MicroGreenVision_Zero/central.json</code> en esta Zero.</li>
+    <li>Completá <code>url</code> con la dirección HTTPS privada de Central y ejecutá <code>bash zero/instalar_zero.sh</code> desde la carpeta del código en la Zero.</li>
+    <li>Volvé a Equipos Zero y actualizá la página hasta ver <strong>Lista para agregar cámaras</strong>.</li>
+  </ol>
+  <label>Configuración de la Zero <textarea id="credencial" rows="8" readonly spellcheck="false">{{ config }}</textarea></label>
+  <div class="acciones equipo-acciones">
+    <button type="button" class="boton primario" data-copiar="credencial">Copiar JSON</button>
+    <a class="boton" href="{{ retorno }}">Volver a Equipos Zero</a>
+    <a href="https://github.com/RobotronicaS/Microgreen_v2/blob/main/docs/instalacion.md#4-copiá-el-zip-y-la-credencial-a-la-zero">Ver pasos de instalación</a>
+  </div>
 </section>
 {% endblock %}

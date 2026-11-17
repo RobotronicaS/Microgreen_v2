@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="titulo">
+  <h1>Equipos Zero</h1>
+  <div class="acciones">
+    {% if seleccionado %}<a class="boton" href="/equipos-zero">Todos los invernáculos</a>{% endif %}
+    <a class="boton" href="/equipos-zero{% if seleccionado %}?vivero={{ seleccionado }}{% endif %}">Actualizar</a>
+  </div>
+</div>
+
+{% if usuario.administrador and viveros %}
+<details class="panel equipo-nuevo"{% if not sitios|selectattr('nodos')|first %} open{% endif %}>
+  <summary>Agregar Zero</summary>
+  <form method="post" action="/equipos-zero" class="form-linea">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Invernáculo
+      <select name="vivero" required>
+        {% if not seleccionado and viveros|length > 1 %}<option value="">Elegí un invernáculo</option>{% endif %}
+        {% for vivero in viveros %}
+        <option value="{{ vivero.id }}"{% if vivero.id == seleccionado %} selected{% endif %}>{{ vivero.nombre }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Nombre del equipo
+      <input name="nombre" required maxlength="80" placeholder="Zero del fondo">
+    </label>
+    <button type="submit" class="boton primario">Crear equipo</button>
+  </form>
+</details>
+{% endif %}
+
+{% for sitio in sitios %}
+<section class="equipos-sitio" aria-labelledby="vivero-{{ sitio.id }}">
+  <h2 id="vivero-{{ sitio.id }}"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a></h2>
+  <div class="grilla-sitios">
+    {% for n in sitio.nodos %}
+    <article class="panel equipo-zero" id="zero-{{ sitio.id }}.{{ n.id }}">
+      <div class="fila">
+        <div><h3>{{ n.nombre }}</h3>{% if n.id != n.nombre %}<small class="muted">{{ n.id }}</small>{% endif %}</div>
+        <span class="estado {{ n.estado }}">{{ n.etiqueta }}</span>
+      </div>
+      <p class="muted">Último contacto {{ n.contacto|fecha_local(sitio.zona) }}</p>
+      {% if not n.enlazado and n.tiene_entrada %}<p class="muted">Entrada rsync configurada</p>{% endif %}
+      <details class="equipo-camaras">
+        <summary>{{ n.camaras|length }} {{ 'puesto asignado' if n.camaras|length == 1 else 'puestos asignados' }}</summary>
+        {% if n.camaras %}
+        <ul class="lista">
+          {% for c in n.camaras %}
+          <li>
+            <div><a href="/viveros/{{ sitio.id }}/camaras/{{ c.id }}">{{ c.nombre }}</a>{% if c.nombre != c.id %} <small class="muted">{{ c.id }}</small>{% endif %}</div>
+            <span class="estado {{ c.estado }}">{{ c.etiqueta }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">Todavía no hay cámaras asignadas.</p>
+        {% endif %}
+      </details>
+      {% if sitio.editable %}
+      <div class="acciones equipo-acciones">
+        {% if n.estado == 'aldia' %}
+        <a class="boton primario" href="/viveros/{{ sitio.id }}/alta-camara?nodo={{ n.id }}">Agregar cámara</a>
+        {% elif n.enlazado %}
+        <a class="boton" href="/supervisor">Revisar conexión</a>
+        {% endif %}
+        {% if usuario.administrador %}
+        <form method="post" action="/viveros/{{ sitio.id }}/nodos/{{ n.id }}/credencial"{% if n.enlazado %} data-confirmar="La Zero necesitará la nueva credencial. ¿Renovarla?"{% endif %}>
+          <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+          <button type="submit" class="boton{% if not n.enlazado %} primario{% endif %}">{{ 'Renovar credencial' if n.enlazado else 'Vincular Zero' }}</button>
+        </form>
+        {% elif not n.enlazado %}
+        <p class="muted">Un administrador puede vincular este equipo.</p>
+        {% endif %}
+      </div>
+      {% endif %}
+    </article>
+    {% else %}
+    <p class="panel muted">Todavía no hay equipos Zero en este invernáculo.</p>
+    {% endfor %}
+  </div>
+</section>
+{% else %}
+<p class="panel muted">No hay invernáculos asignados a tu cuenta.</p>
+{% endfor %}
+{% endblock %}

@@ -1,6 +1,6 @@
 # Microgreen2
 
-Microgreen2 usa **MicroGreenVision Central v0.4** y una Raspberry Pi Zero para tomar fotos de un invernáculo. En esta práctica vas a agregar **una cámara**, tomar su primera foto y verla en el historial.
+Microgreen2 usa **MicroGreenVision Central v0.5** y una Raspberry Pi Zero para tomar fotos de un invernáculo. En esta práctica vas a agregar **una cámara**, tomar su primera foto y verla en el historial.
 
 | Equipo | Qué hace |
 | --- | --- |
@@ -20,11 +20,11 @@ Si te toca instalar los equipos, seguí la [instalación desde cero](docs/instal
 
 1. Abrí en el navegador el enlace que te dio el docente. Si es un enlace privado de Tailscale, iniciá sesión en la red de la práctica en tu computadora.
 2. Ingresá con tu cuenta del panel. El permiso **Técnico** habilita el alta en tu invernáculo.
-3. Abrí **Invernáculos**, elegí el que te asignaron y pulsá **Agregar cámara**.
+3. Abrí **Equipos Zero**, buscá el invernáculo y el equipo que te asignaron y pulsá **Agregar cámara** en su ficha.
 
 ## 2. Buscá la cámara
 
-1. En **Zero de captura**, seleccioná la Zero que te asignaron. Un nombre de ejemplo es **zero01**.
+1. Confirmá que **Zero de captura** muestra tu equipo. Un nombre de ejemplo es **zero01**.
 2. Pulsá **Buscar cámaras**. La Zero consulta por ONVIF en su Wi‑Fi. Esperá a que aparezcan los resultados.
 3. Ubicá tu cámara por nombre o por IP y pulsá **Usar IP**. Si la búsqueda queda vacía, ingresá la IP de tu cámara. Podés encontrarla en su app o en la lista de equipos conectados del router.
 
@@ -55,7 +55,7 @@ La práctica queda completa cuando podés mostrar **el invernáculo, el puesto y
 
 | Lo que ves | Qué hacer |
 | --- | --- |
-| Falta **Agregar cámara** | Confirmá que tu cuenta tenga permiso **Técnico** en ese invernáculo y que Central esté en v0.4. |
+| Falta **Agregar cámara** | Confirmá que tu cuenta tenga permiso **Técnico** en ese invernáculo y que tu Zero figure como **Lista para agregar cámaras**. |
 | La Zero dice **sin enlace de alta** | Avisale al docente qué nodo aparece. Puede revisar el agente y el enlace HTTPS desde la Zero. |
 | **Buscar cámaras** no encuentra equipos | Confirmá la IP en el router. Cargala a mano y probá. |
 | La prueba rechaza el acceso | Revisá la cuenta local de la cámara y que RTSP esté habilitado. Volvé a pulsar **Probar y agregar**. |

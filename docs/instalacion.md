@@ -48,7 +48,7 @@ En la primera instalación, anotá la contraseña que aparece en **Primer acceso
 curl -fsS http://127.0.0.1:8766/salud
 ~~~
 
-El resultado esperado es `{"estado":"ok","version":"0.4"}`. Dejá abierta la ventana SSH y entrá al [panel de Central](http://127.0.0.1:8766). Iniciá sesión con **admin** y la contraseña de la instalación. En **Mi cuenta** podés cambiarla. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**.
+El resultado esperado es `{"estado":"ok","version":"0.5"}`. Dejá abierta la ventana SSH y entrá al [panel de Central](http://127.0.0.1:8766). Iniciá sesión con **admin** y la contraseña de la instalación. En **Mi cuenta** podés cambiarla. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**.
 
 ## 3. Prepará el enlace privado de la Zero a Central
 
@@ -72,7 +72,7 @@ Si aparece un enlace para habilitar HTTPS en la red, seguí ese enlace y repetí
 
 ## 4. Copiá el ZIP y la credencial a la Zero
 
-En el panel, con la cuenta **admin**, abrí **Vivero piloto → Configurar cámaras**. En el nodo **zero01**, pulsá **Generar credencial** y copiá el JSON. Si el docente preparó otro invernáculo o nodo para la práctica, seleccioná ese. Si la Zero ya está vinculada a ese mismo nodo, usá su `central.json` actual. Generar otra credencial para un nodo enlazado reemplaza su acceso anterior.
+En el panel, con la cuenta **admin**, abrí **Equipos Zero**. Buscá **Vivero piloto** y el equipo **zero01**. Para otra Raspberry, pulsá **Agregar Zero**, elegí su invernáculo, poné un nombre y creá el equipo. En la ficha correspondiente pulsá **Vincular Zero** y copiá el JSON. Si la Zero ya está vinculada a ese mismo nodo, usá su `central.json` actual. **Renovar credencial** cambia el acceso del equipo. Usá esa opción si necesitás reemplazar su credencial.
 
 Abrí **otra ventana de PowerShell**. Escribí el **usuario@IP de la Zero** cuando te lo pida.
 
@@ -116,7 +116,7 @@ bash zero/instalar_zero.sh &&
 systemctl --user is-active microgreen-zero-central-altas.timer
 ~~~
 
-El instalador prepara una Zero nueva con una configuración de cámaras vacía. También prueba que su credencial sirva antes de activar los temporizadores. El último comando debería mostrar **active**. Esperá unos segundos y actualizá **Vivero piloto → Agregar cámara**. La Zero debería estar disponible. Seguí desde el [paso de búsqueda de la práctica](../README.md#2-buscá-la-cámara).
+El instalador prepara una Zero nueva con una configuración de cámaras vacía. También prueba que su credencial sirva antes de activar los temporizadores. El último comando debería mostrar **active**. Esperá unos segundos y actualizá **Equipos Zero**. Cuando tu equipo diga **Lista para agregar cámaras**, pulsá **Agregar cámara**. Seguí desde el [paso de búsqueda de la práctica](../README.md#2-buscá-la-cámara).
 
 Si la Zero sigue sin enlace, consultá el registro desde su terminal.
 

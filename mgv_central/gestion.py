@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 import json
 import secrets
 
@@ -8,6 +9,7 @@ from .acceso import codificar_clave, clave_valida, exigir, huella, validar_cuent
 from .base import auditar, conectar
 from .configuracion import cargar_configuracion
 from .dominio import INTERVALOS, PUESTOS, hora_formulario, identificador, texto, zona
+from .resumen import ATRASO_CONTACTO, alta_disponible, resumen_camaras, viveros_visibles
 from .web import datos_formulario, fila, pagina, sitio, volver
 
 rutas = APIRouter()
@@ -96,15 +98,86 @@ def ajustar(peticion: Request, vivero: str, datos: FormData = Depends(datos_form
     return volver(f"/viveros/{vivero}/ajustes")
 
 
+@rutas.get("/equipos-zero")
+def equipos_zero(peticion: Request, vivero: str = ""):
+    ahora = datetime.now(UTC)
+    with conectar(cargar_configuracion()) as conexion:
+        usuario = exigir(conexion, peticion)
+        viveros = viveros_visibles(conexion, usuario)
+        visibles = [v for v in viveros if not vivero or v["id"] == vivero]
+        if vivero and not visibles:
+            raise HTTPException(404, "Invernáculo desconocido.")
+        sitios = resumen_camaras(conexion, visibles, ahora)
+        editables = {v["id"] for v in visibles} if usuario["administrador"] else {
+            r["vivero_id"] for r in conexion.execute(
+                "SELECT vivero_id FROM permisos WHERE usuario_id = %s AND rol = 'tecnico'",
+                (usuario["id"],),
+            ).fetchall()
+        }
+    for registro in sitios:
+        registro["editable"] = registro["id"] in editables
+        asignadas = {}
+        for camara in registro["camaras"]:
+            asignadas.setdefault(camara["nodo_id"], []).append(camara)
+        for nodo in registro["nodos"]:
+            preparar_equipo(nodo, asignadas.get(nodo["id"], []), ahora)
+    return pagina(peticion, "equipos_zero.html", usuario, sitios=sitios, viveros=viveros,
+                  seleccionado=vivero, titulo="Equipos Zero")
+
+
+def preparar_equipo(nodo, camaras, ahora):
+    contacto = max((t for t in (nodo["ultimo_contacto"], nodo["alta_en"]) if t), default=None)
+    if alta_disponible(nodo, ahora):
+        estado, etiqueta = "aldia", "Lista para agregar cámaras"
+    elif not nodo["enlazado"]:
+        estado, etiqueta = "esperando", "Por vincular"
+    elif contacto is None:
+        estado, etiqueta = "esperando", "Esperando la conexión"
+    elif ahora - contacto > ATRASO_CONTACTO:
+        estado, etiqueta = "atrasada", "Sin contacto reciente"
+    else:
+        estado, etiqueta = "alerta", "Alta no disponible"
+    nodo.update(contacto=contacto, estado=estado, etiqueta=etiqueta, camaras=camaras)
+
+
+@rutas.post("/equipos-zero")
+def agregar_zero(peticion: Request, datos: FormData = Depends(datos_formulario)):
+    vivero = datos.get("vivero", "")
+    with conectar(cargar_configuracion()) as conexion:
+        usuario = exigir(conexion, peticion, vivero, admin=True, formulario=datos)
+        nombre = texto(datos.get("nombre", ""), 80, True)
+        nodo = registrar_nodo(conexion, usuario, vivero, nombre)
+    return volver(enlace_equipo(vivero, nodo))
+
+
+def enlace_equipo(vivero, nodo):
+    return f"/equipos-zero?vivero={vivero}#zero-{vivero}.{nodo}"
+
+
+def registrar_nodo(conexion, usuario, vivero, nombre, nodo=None):
+    with conexion.transaction():
+        conexion.execute("SELECT id FROM viveros WHERE id = %s FOR UPDATE", (vivero,))
+        if nodo is None:
+            guardados = conexion.execute(
+                "SELECT id, nombre FROM nodos WHERE vivero_id = %s ORDER BY id", (vivero,),
+            ).fetchall()
+            existente = next((n for n in guardados if n["nombre"].casefold() == nombre.casefold()), None)
+            if existente:
+                return existente["id"]
+            ocupados = {n["id"] for n in guardados}
+            nodo = next(codigo for n in range(1, len(ocupados) + 2)
+                        if (codigo := f"zero{n:02d}") not in ocupados)
+        conexion.execute("INSERT INTO nodos (vivero_id, id, nombre) VALUES (%s, %s, %s)", (vivero, nodo, nombre))
+        auditar(conexion, usuario, vivero, "crear nodo", nodo)
+    return nodo
+
+
 @rutas.post("/viveros/{vivero}/nodos")
 def crear_nodo(peticion: Request, vivero: str, datos: FormData = Depends(datos_formulario)):
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, vivero, admin=True, formulario=datos)
         nodo = identificador(datos.get("id", "")).lower()
-        with conexion.transaction():
-            conexion.execute("INSERT INTO nodos (vivero_id, id, nombre) VALUES (%s, %s, %s)",
-                             (vivero, nodo, texto(datos.get("nombre", ""), 80, True)))
-            auditar(conexion, usuario, vivero, "crear nodo", nodo)
+        registrar_nodo(conexion, usuario, vivero, texto(datos.get("nombre", ""), 80, True), nodo)
     return volver(f"/viveros/{vivero}/ajustes")
 
 
@@ -126,11 +199,12 @@ def credencial(peticion: Request, vivero: str, nodo: str, datos: FormData = Depe
         usuario = exigir(conexion, peticion, vivero, admin=True, formulario=datos)
         token = secrets.token_urlsafe(32)
         with conexion.transaction():
-            fila(conexion, """UPDATE nodos SET token_sha = %s, autorizado_en = now(), ultimo_contacto = NULL, alta_en = NULL, reporte = '{}'
-                 WHERE vivero_id = %s AND id = %s RETURNING id""", (huella(token), vivero, nodo), "Nodo desconocido.")
+            equipo = fila(conexion, """UPDATE nodos SET token_sha = %s, autorizado_en = now(), ultimo_contacto = NULL, alta_en = NULL, reporte = '{}'
+                 WHERE vivero_id = %s AND id = %s RETURNING nombre""", (huella(token), vivero, nodo), "Nodo desconocido.")
             auditar(conexion, usuario, vivero, "emitir credencial", nodo)
     config = json.dumps({"url": "https://TU-NODO.ts.net:8766", "vivero": vivero, "nodo": nodo, "token": token}, indent=2)
-    return pagina(peticion, "credencial.html", usuario, config=config, vivero=vivero, nodo=nodo, titulo="Credencial del nodo")
+    return pagina(peticion, "credencial.html", usuario, config=config, nombre=equipo["nombre"],
+                  retorno=enlace_equipo(vivero, nodo), titulo="Vincular Zero")
 
 
 @rutas.post("/viveros/{vivero}/camaras")

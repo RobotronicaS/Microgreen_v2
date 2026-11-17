@@ -219,3 +219,18 @@ code { white-space: normal; overflow-wrap: anywhere; }
 @media (max-width: 420px) {
   .alta-campos { grid-template-columns: minmax(0, 1fr); }
 }
+
+.equipos-sitio { margin-top: 1.45rem; }
+.equipos-sitio > h2 a { text-decoration: none; }
+.equipo-nuevo summary { font-size: 1.05rem; }
+.equipo-nuevo label { flex: 1 1 13rem; min-width: 0; }
+.equipo-camaras { margin: .65rem 0 .85rem; }
+.equipo-camaras .estado { flex: 0 0 auto; }
+.equipo-zero h3, .equipo-zero small, .equipo-nuevo select { overflow-wrap: anywhere; }
+.equipo-zero h3 { margin-bottom: .15rem; }
+.equipo-zero .fila { margin-bottom: .65rem; }
+.equipo-zero:target { outline: 2px solid #429779; outline-offset: 3px; scroll-margin: 1rem; }
+.equipo-acciones { margin-top: .8rem; }
+.equipo-acciones p { margin: 0; }
+.pasos-credencial { padding-left: 1.3rem; line-height: 1.55; }
+.pasos-credencial li + li { margin-top: .45rem; }

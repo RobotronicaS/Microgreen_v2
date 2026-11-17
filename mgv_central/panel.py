@@ -81,7 +81,7 @@ async def error_base(peticion, error):
 def salud():
     with conectar(cargar_configuracion()) as conexion:
         conexion.execute("SELECT 1")
-    return {"estado": "ok", "version": "0.4"}
+    return {"estado": "ok", "version": "0.5"}
 
 
 @app.get("/ingresar")

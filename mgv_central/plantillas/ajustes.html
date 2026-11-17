@@ -29,25 +29,9 @@
   </form>
 </section>
 <section class="panel">
-  <h2>Nodos de captura</h2>
-  <ul class="lista">{% for n in nodos %}
-    <li><div><strong>{{ n.nombre }}</strong><div class="muted">{{ n.id }} · {{ 'Enlazado' if n.enlazado else 'Pendiente de enlace' }}
-    {% if n.entrada_legacy %} · Recepción rsync{% endif %}</div></div>
-    {% if usuario.administrador %}
-      <form method="post" action="/viveros/{{ sitio.id }}/nodos/{{ n.id }}/credencial" {% if n.enlazado %}data-confirmar="La Zero necesitará la nueva credencial. ¿Renovarla?"{% endif %}>
-        <input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton">{{ 'Renovar credencial' if n.enlazado else 'Generar credencial' }}</button>
-      </form>
-    {% endif %}</li>
-  {% endfor %}</ul>
-  {% if usuario.administrador %}
-  <details><summary>Agregar nodo</summary>
-    <form method="post" class="form-linea" action="/viveros/{{ sitio.id }}/nodos">
-      <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
-      <label>Identificador <input name="id" required maxlength="32" placeholder="zero02"></label>
-      <label>Nombre <input name="nombre" required maxlength="80"></label>
-      <button class="boton primario">Agregar</button>
-    </form>
-  </details>{% endif %}
+  <h2>Equipos Zero</h2>
+  <p class="muted">Vinculá los equipos de este invernáculo y revisá las cámaras de cada uno.</p>
+  <a class="boton" href="/equipos-zero?vivero={{ sitio.id }}">Ver equipos Zero</a>
 </section>
 </div>
 <section class="panel">

@@ -3,6 +3,7 @@ from datetime import UTC, datetime, time, timedelta
 from .dominio import en_horario, turnos, zona
 
 ATRASO_CONTACTO = timedelta(minutes=10)
+ATRASO_ALTA = timedelta(seconds=90)
 ATRASO_ENVIO = timedelta(hours=1)
 ATRASO_IMPORTADOR = timedelta(minutes=5)
 
@@ -14,6 +15,10 @@ def viveros_visibles(conexion, usuario):
         """SELECT v.* FROM viveros v JOIN permisos p ON p.vivero_id = v.id
         WHERE p.usuario_id = %s ORDER BY v.nombre, v.id""", (usuario["id"],),
     ).fetchall()
+
+
+def alta_disponible(nodo, ahora):
+    return bool(nodo["enlazado"] and nodo["alta_en"] and ahora - nodo["alta_en"] <= ATRASO_ALTA)
 
 
 def ficha_camara(camara, sitio_zona, ahora):
@@ -70,7 +75,7 @@ def resumen_camaras(conexion, viveros, ahora=None):
         )) if camara["activa"] else 0
         vivero["camaras"].append({**camara, "estado": estado, "etiqueta": etiqueta, "esperadas": esperadas})
     nodos = conexion.execute(
-        """SELECT vivero_id, id, nombre, ultimo_contacto, autorizado_en, reporte,
+        """SELECT vivero_id, id, nombre, ultimo_contacto, autorizado_en, alta_en, reporte,
            token_sha IS NOT NULL AS enlazado, entrada_legacy IS NOT NULL AS tiene_entrada
         FROM nodos WHERE vivero_id = ANY(%s) ORDER BY id""", (ids,),
     ).fetchall()

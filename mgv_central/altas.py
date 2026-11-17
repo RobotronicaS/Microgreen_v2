@@ -20,11 +20,13 @@ from .dominio import PUESTOS, identificador, texto
 from .gestion import registrar_origenes
 from .ingesta import guardar_archivo
 from .receptor import autenticar, json_limitado, nombre_jpg
+from .resumen import alta_disponible
 from .web import datos_formulario, fila, pagina, sitio
 
 rutas = APIRouter()
 ID_ALTA = re.compile(r"[a-f0-9]{32}")
 ABIERTA = ("pendiente", "en_curso")
+HILERAS = dict(PUESTOS)
 VENCIDA = "La Zero no terminó la prueba a tiempo. Revisá el enlace y volvé a intentar."
 
 
@@ -106,53 +108,77 @@ def perfil_camara(datos):
     return {"tipo": "tapo" if tipo == "tapo" else "rtsp", "rtsp": url}
 
 
-def opciones_puestos(conexion, vivero, nodos):
-    puestos = conexion.execute(
-        """SELECT c.id, c.nombre, c.nodo_id, c.hilera, EXISTS (
-            SELECT 1 FROM capturas f WHERE f.vivero_id = c.vivero_id AND f.camara_id = c.id
-        ) AS con_fotos FROM camaras c WHERE c.vivero_id = %s ORDER BY c.hilera, c.id""", (vivero,),
+def consultar_puestos(conexion, vivero, camara=None):
+    return conexion.execute(
+        """SELECT c.id, c.nombre, c.nodo_id, c.hilera, c.activa,
+            EXISTS (SELECT 1 FROM capturas f WHERE f.vivero_id = c.vivero_id AND f.camara_id = c.id) AS con_fotos,
+            (EXISTS (SELECT 1 FROM origenes o WHERE o.vivero_id = c.vivero_id AND o.camara_id = c.id)
+             OR EXISTS (SELECT 1 FROM altas_camara a WHERE a.vivero_id = c.vivero_id
+                        AND a.camara_id = c.id AND a.estado = 'ok')) AS usada
+        FROM camaras c WHERE c.vivero_id = %s AND (%s::text IS NULL OR c.id = %s)
+        ORDER BY c.hilera, c.id""", (vivero, camara, camara),
     ).fetchall()
+
+
+def puesto_disponible(puesto, nodo):
+    if puesto["con_fotos"]:
+        return False
+    if puesto["nodo_id"] == nodo:
+        return True
+    return (not puesto["activa"] and not puesto["usada"]
+            and puesto["nombre"] == puesto["id"] and HILERAS.get(puesto["id"]) == puesto["hilera"])
+
+
+def opciones_puestos(conexion, vivero, nodos):
+    puestos = consultar_puestos(conexion, vivero)
     ocupados = {p["id"] for p in puestos}
     nuevos = [{"id": codigo, "nombre": codigo} for codigo, _ in PUESTOS if codigo not in ocupados]
-    return {n["id"]: [p for p in puestos if p["nodo_id"] == n["id"] and not p["con_fotos"]] + nuevos for n in nodos}
+    opciones = {}
+    for n in nodos:
+        disponibles = [p for p in puestos if puesto_disponible(p, n["id"])]
+        propias = [p for p in disponibles if p["nodo_id"] == n["id"]]
+        plantilla = [{**p, "de_plantilla": True} for p in disponibles if p["nodo_id"] != n["id"]]
+        opciones[n["id"]] = propias + nuevos + plantilla
+    return opciones
 
 
 @rutas.get("/viveros/{vivero}/alta-camara")
-def pagina_alta(peticion: Request, vivero: str, solicitud: str = ""):
+def pagina_alta(peticion: Request, vivero: str, solicitud: str = "", nodo: str = ""):
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, vivero, editar=True)
         registro = sitio(conexion, vivero)
         nodos = conexion.execute(
-            """SELECT id, nombre, (token_sha IS NOT NULL AND alta_en >= now() - interval '90 seconds') AS disponible
-            FROM nodos WHERE vivero_id = %s ORDER BY id""", (vivero,),
+            """SELECT id, nombre, alta_en, token_sha IS NOT NULL AS enlazado
+            FROM nodos WHERE vivero_id = %s AND (%s = '' OR id = %s) ORDER BY id""", (vivero, nodo, nodo),
         ).fetchall()
+        if nodo and not nodos:
+            raise HTTPException(404, "Zero desconocida.")
+        ahora = datetime.now(UTC)
+        for equipo in nodos:
+            equipo["disponible"] = alta_disponible(equipo, ahora)
         puestos = opciones_puestos(conexion, vivero, nodos)
-        if not ID_ALTA.fullmatch(solicitud):
-            reciente = conexion.execute(
-                """SELECT id FROM altas_camara WHERE vivero_id = %s AND solicitante = %s
-                AND (estado IN ('pendiente', 'en_curso') OR (tipo = 'agregar' AND terminada_en > now() - interval '2 minutes'))
-                ORDER BY creada_en DESC LIMIT 1""", (vivero, usuario["id"]),
-            ).fetchone()
-            solicitud = reciente["id"] if reciente else ""
-    return pagina(peticion, "alta_camara.html", usuario, sitio=registro, nodos=nodos,
-                  puestos=puestos, solicitud=solicitud, titulo="Agregar cámara")
-
-
-def tiene_fotos(conexion, vivero, camara):
-    return conexion.execute(
-        "SELECT 1 FROM capturas WHERE vivero_id = %s AND camara_id = %s LIMIT 1", (vivero, camara),
-    ).fetchone() is not None
+        solicitud = solicitud if ID_ALTA.fullmatch(solicitud) else ""
+        reciente = conexion.execute(
+            """SELECT id FROM altas_camara WHERE vivero_id = %s AND (%s = '' OR nodo_id = %s)
+            AND (id = %s OR (solicitante = %s AND
+                ((estado IN ('pendiente', 'en_curso') AND vence_en > now())
+                 OR (tipo = 'agregar' AND terminada_en > now() - interval '2 minutes'))))
+            ORDER BY (id = %s) DESC, creada_en DESC LIMIT 1""",
+            (vivero, nodo, nodo, solicitud, usuario["id"], solicitud),
+        ).fetchone()
+    return pagina(peticion, "alta_camara.html", usuario, sitio=registro, nodos=nodos, puestos=puestos,
+                  solicitud=reciente["id"] if reciente else "", nodo_fijado=nodos[0] if nodo else None,
+                  titulo="Agregar cámara")
 
 
 def datos_puesto(conexion, vivero, nodo, camara, nombre):
-    puesto = conexion.execute(
-        "SELECT nombre, nodo_id, hilera FROM camaras WHERE vivero_id = %s AND id = %s", (vivero, camara),
-    ).fetchone()
-    if puesto:
-        if puesto["nodo_id"] != nodo or tiene_fotos(conexion, vivero, camara):
+    existentes = consultar_puestos(conexion, vivero, camara)
+    if existentes:
+        puesto = existentes[0]
+        if not puesto_disponible(puesto, nodo):
             raise HTTPException(409, "Ese puesto ya está ocupado. Elegí otro.")
         return nombre or puesto["nombre"], puesto["hilera"]
-    hilera = dict(PUESTOS).get(camara)
+    hilera = HILERAS.get(camara)
     if hilera is None:
         raise HTTPException(409, "El puesto dejó de estar disponible. Actualizá la página.")
     return nombre or camara, hilera
@@ -175,10 +201,9 @@ def solicitar(peticion: Request, vivero: str, datos: FormData = Depends(datos_fo
         try:
             with conexion.transaction():
                 conexion.execute("SELECT id FROM viveros WHERE id = %s FOR UPDATE", (vivero,))
-                equipo = fila(conexion, """SELECT token_sha IS NOT NULL
-                    AND alta_en >= now() - interval '90 seconds' AS disponible FROM nodos
-                    WHERE vivero_id = %s AND id = %s""", (vivero, nodo), "Zero desconocida.")
-                if not equipo["disponible"]:
+                equipo = fila(conexion, """SELECT alta_en, token_sha IS NOT NULL AS enlazado
+                    FROM nodos WHERE vivero_id = %s AND id = %s""", (vivero, nodo), "Zero desconocida.")
+                if not alta_disponible(equipo, datetime.now(UTC)):
                     raise HTTPException(409, "La Zero necesita estar conectada con el agente v0.4.")
                 if conexion.execute(
                     """SELECT 1 FROM altas_camara WHERE vivero_id = %s AND (nodo_id = %s OR camara_id = %s)
@@ -259,19 +284,27 @@ def tomar(peticion: Request, vivero: str, nodo: str):
 
 def registrar_camara(conexion, alta, vivero, nodo):
     camara = alta["camara_id"]
-    puesto = conexion.execute(
-        "SELECT nodo_id FROM camaras WHERE vivero_id = %s AND id = %s FOR UPDATE", (vivero, camara),
-    ).fetchone()
-    if puesto and (puesto["nodo_id"] != nodo or tiene_fotos(conexion, vivero, camara)):
-        return False
-    registrada = conexion.execute(
-        """INSERT INTO camaras (vivero_id, id, nodo_id, nombre, hilera, activa)
-        VALUES (%s, %s, %s, %s, %s, true)
-        ON CONFLICT (vivero_id, id) DO UPDATE
-        SET activa = true, nombre = EXCLUDED.nombre, actualizada_en = now()
-        WHERE camaras.nodo_id = EXCLUDED.nodo_id RETURNING id""",
-        (vivero, camara, nodo, alta["nombre"], alta["hilera"]),
-    ).fetchone()
+    conexion.execute("SELECT 1 FROM camaras WHERE vivero_id = %s AND id = %s FOR UPDATE", (vivero, camara))
+    existentes = consultar_puestos(conexion, vivero, camara)
+    if existentes:
+        puesto = existentes[0]
+        if not puesto_disponible(puesto, nodo):
+            return False
+        registrada = conexion.execute(
+            """UPDATE camaras SET nodo_id = %s, activa = true, nombre = %s, actualizada_en = now()
+            WHERE vivero_id = %s AND id = %s RETURNING id""", (nodo, alta["nombre"], vivero, camara),
+        ).fetchone()
+        if puesto["nodo_id"] != nodo:
+            conexion.execute(
+                "DELETE FROM camaras_origen WHERE vivero_id = %s AND nodo_id = %s AND camara_id = %s",
+                (vivero, puesto["nodo_id"], camara),
+            )
+    else:
+        registrada = conexion.execute(
+            """INSERT INTO camaras (vivero_id, id, nodo_id, nombre, hilera, activa)
+            VALUES (%s, %s, %s, %s, %s, true) ON CONFLICT (vivero_id, id) DO NOTHING RETURNING id""",
+            (vivero, camara, nodo, alta["nombre"], alta["hilera"]),
+        ).fetchone()
     if registrada:
         registrar_origenes(conexion, vivero)
         auditar(conexion, {"id": alta["solicitante"]}, vivero, "alta de cámara probada", camara)

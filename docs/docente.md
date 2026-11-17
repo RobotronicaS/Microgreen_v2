@@ -9,13 +9,21 @@ La práctica está publicada en el repositorio privado [RobotronicaS/Microgreen_
 
 Para compartir un repositorio privado, entrá a **Settings → Collaborators → Add people** y buscá el usuario de GitHub del estudiante. Una vez que acepte la invitación, pasale el enlace al README. [Invitar a un colaborador](https://docs.github.com/es/repositories/managing-your-repositorys-settings-and-features/repository-access-and-collaboration/inviting-collaborators-to-a-personal-repository)
 
-## 2. Prepará su cuenta en Central
+## 2. Prepará la Zero y su cámara
+
+1. Entrá a **Equipos Zero**. Si el equipo todavía no figura, elegí **Agregar Zero**, seleccioná el invernáculo y escribí un nombre. Central asigna un ID como **zero02**.
+2. En la ficha nueva, pulsá **Vincular Zero**. Completá la instalación de esa Raspberry con el [paso de credencial](instalacion.md#4-copiá-el-zip-y-la-credencial-a-la-zero). Cada Raspberry usa su propio archivo de enlace.
+3. Actualizá el panel. Cuando la Zero figure **Lista para agregar cámaras**, abrí **Agregar cámara** desde su ficha. Los puestos vacíos de la plantilla también están disponibles. Se asignan a esta Zero cuando la prueba toma su primera foto.
+
+Para actualizar un Central existente, descargá el ZIP actual y ejecutá de nuevo [el instalador de Central](instalacion.md#2-copiá-el-zip-e-instalá-central). Los equipos enlazados con el agente v0.4 ya son compatibles.
+
+## 3. Prepará su cuenta en Central
 
 El acceso al código y el acceso al panel se crean por separado. En **Central**, ingresá como administrador.
 
 1. Abrí **Administración → Nueva cuenta**. Creá una cuenta para el estudiante, por ejemplo **estudiante**, con una contraseña inicial de al menos 12 caracteres. Dejá desmarcada la opción **Administrador de todos los sitios**.
 2. En **Permisos por sitio**, elegí su cuenta y el invernáculo asignado. Seleccioná **Técnico** y pulsá **Guardar acceso**.
-3. Confirmá que **Agregar cámara** muestre una Zero disponible y que el puesto elegido esté libre. Si el agente o el servidor todavía requieren instalación, seguí la [instalación desde cero](instalacion.md).
+3. Confirmá que en **Equipos Zero** la Raspberry esté disponible y que el puesto elegido esté libre. Si el agente o el servidor todavía requieren instalación, seguí la [instalación desde cero](instalacion.md).
 4. Compartí en privado el enlace del panel, la cuenta y la contraseña inicial. Indicá el invernáculo, la Zero, el puesto y la cámara que tiene que usar. Si el panel está servido por Tailscale, autorizá el acceso del estudiante a Central en la red de la práctica.
 
 El estudiante completa la guía del README y muestra la primera foto de su puesto en **Ver historial**.

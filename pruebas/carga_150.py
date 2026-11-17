@@ -2,6 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
+from html import unescape
 from io import BytesIO
 import json
 import os
@@ -152,7 +153,7 @@ def comprobar(config):
             conexion.execute("INSERT INTO trabajos (vivero_id, tipo, estado, datos) VALUES ('sitio02', 'zip', 'error', '{}')")
         ingresar(cliente, "admin", acceso)
         for ruta in ("/", "/viveros/piloto", "/viveros/piloto/ajustes", "/supervisor", "/diagnostico", "/alertas", "/trabajos",
-                     "/gestion", "/viveros/piloto/camaras/H1-C01?lote=", "/viveros/piloto/lotes/nuevo",
+                     "/gestion", "/equipos-zero", "/viveros/piloto/camaras/H1-C01?lote=", "/viveros/piloto/lotes/nuevo",
                      "/viveros/piloto/sensores"):
             respuesta = cliente.get(ruta)
             assert respuesta.status_code == 200, (ruta, respuesta.status_code, respuesta.text[:250])
@@ -181,6 +182,12 @@ def comprobar(config):
         supervisor = cliente.get("/supervisor?parcial=true")
         assert supervisor.status_code == 200 and 'data-supervisor-seccion="sitio-piloto"' in supervisor.text
         assert all(texto not in supervisor.text for texto in ("sitio02", "Servidor central", "Sin contacto", "trabajo con error"))
+        equipos = cliente.get("/equipos-zero")
+        assert equipos.status_code == 200 and "Vivero piloto" in equipos.text
+        assert "Agregar Zero" not in equipos.text and "sitio02" not in equipos.text
+        assert cliente.get("/equipos-zero?vivero=sitio02").status_code == 404
+        csrf = re.search(r'name="csrf" value="([^"]+)"', equipos.text)[1]
+        assert cliente.post("/equipos-zero", data=dict(csrf=csrf, vivero="piloto", nombre="Copia")).status_code == 403
         assert cliente.get("/viveros/sitio02").status_code == 403
         assert cliente.get(f"/fotos/{ajena}.jpg").status_code == 403
         assert cliente.get(f"/miniaturas/{ajena}.jpg").status_code == 403
@@ -253,7 +260,69 @@ def comprobar_altas(config, acceso, token_ajeno):
         assert prueba["estado"] == "ok" and cliente.get(prueba["miniatura"]).status_code == 200
         assert cliente.post(api, data=datos).status_code == 409
         assert cliente.get(f"/viveros/{sitio}").status_code == 200
+        comprobar_segunda_zero(cliente, config, sitio, csrf, token)
     print("Alta probada: busqueda, reintento, registro idempotente, primera foto y proteccion de puestos.")
+
+
+def comprobar_segunda_zero(cliente, config, sitio, csrf, token_primera):
+    datos = dict(csrf=csrf, vivero=sitio, nombre="Zero del fondo")
+    for _ in range(2):
+        creada = cliente.post("/equipos-zero", data=datos, follow_redirects=False)
+        assert creada.status_code == 303, creada.text
+        assert creada.headers["location"] == f"/equipos-zero?vivero={sitio}#zero-{sitio}.zero02"
+
+    with conectar(config) as conexion:
+        assert conexion.execute(
+            "SELECT count(*) AS cantidad FROM nodos WHERE vivero_id = %s", (sitio,),
+        ).fetchone()["cantidad"] == 2
+    vinculacion = cliente.post(f"/viveros/{sitio}/nodos/zero02/credencial", data={"csrf": csrf})
+    assert vinculacion.status_code == 200 and "Vincular Zero del fondo" in vinculacion.text
+    entrada = re.search(r'<textarea id="credencial"[^>]*>([^<]+)</textarea>', vinculacion.text)[1]
+    credencial = json.loads(unescape(entrada))
+    assert credencial["nodo"] == "zero02" and credencial["vivero"] == sitio
+
+    cliente.post(f"/viveros/{sitio}/plantilla", data=dict(csrf=csrf, nodo=NODO))
+    enc = {"Authorization": f"Bearer {credencial['token']}"}
+    base_nodo = f"/api/nodos/{sitio}/zero02"
+    respuesta = cliente.post(base_nodo + "/altas/tomar", headers=enc)
+    assert respuesta.json() == {"solicitud": None}
+
+    equipos = cliente.get(f"/equipos-zero?vivero={sitio}")
+    assert equipos.status_code == 200 and "Lista para agregar cámaras" in equipos.text
+    assert f"/viveros/{sitio}/alta-camara?nodo=zero02" in equipos.text
+    alta = cliente.get(f"/viveros/{sitio}/alta-camara?nodo=zero02")
+    assert alta.status_code == 200 and 'data-nodo="zero02"' in alta.text
+    assert 'data-nodo="zero01"' not in alta.text
+    assert "H1-C02 · libre de la plantilla" in alta.text
+    assert 'value="H1-C01"' not in alta.text
+
+    formulario = dict(csrf=csrf, nodo="zero02", accion="agregar", tipo="tapo", ip="192.168.1.52",
+                      usuario_camara="prueba", clave_camara="clave-de-ensayo")
+    url = f"/api/viveros/{sitio}/altas"
+    assert cliente.post(url, data={**formulario, "camara": "H1-C01"}).status_code == 409
+    solicitud = cliente.post(url, data={**formulario, "camara": "H1-C02"})
+    assert solicitud.status_code == 202, solicitud.text
+    codigo = solicitud.json()["id"]
+    assert cliente.post(base_nodo + "/altas/tomar", headers=enc).json()["solicitud"]["id"] == codigo
+    assert cliente.get(f"/viveros/{sitio}/alta-camara?nodo=zero01&solicitud={codigo}").status_code == 200
+    assert f'data-solicitud="{codigo}"' not in cliente.get(
+        f"/viveros/{sitio}/alta-camara?nodo=zero01&solicitud={codigo}",
+    ).text
+    fecha = datetime.now(UTC)
+    respuesta = cliente.post(f"{base_nodo}/altas/{codigo}/resultado", headers=enc,
+                             json={"ok": True, "foto": nombre(fecha)})
+    assert respuesta.json() == {"aceptada": True}
+    assert subir(cliente, sitio, "H1-C02", fecha, ejemplo(1235), token_primera).status_code == 403
+    with conectar(config) as conexion:
+        asignadas = conexion.execute(
+            "SELECT id, nodo_id FROM camaras WHERE vivero_id = %s AND id IN ('H1-C01', 'H1-C02') ORDER BY id",
+            (sitio,),
+        ).fetchall()
+        assert [r["nodo_id"] for r in asignadas] == ["zero01", "zero02"]
+        fuentes = conexion.execute(
+            "SELECT nodo_id FROM camaras_origen WHERE vivero_id = %s AND camara_id = 'H1-C02'", (sitio,),
+        ).fetchall()
+        assert fuentes == [{"nodo_id": "zero02"}]
 
 
 def main():
