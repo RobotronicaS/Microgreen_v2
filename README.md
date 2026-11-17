@@ -6,7 +6,7 @@ Microgreen2 usa **MicroGreenVision Central v0.5** y una Raspberry Pi Zero para t
 | --- | --- |
 | Central | Muestra el panel, recibe las fotos y guarda el historial. |
 | Raspberry Pi Zero | Busca la cámara en su red local, toma el JPG y lo envía a Central. |
-| Tu computadora | Abre el panel en el navegador. PowerShell se usa para instalar o abrir un túnel SSH. |
+| Tu computadora o celular | Abre el enlace HTTPS de Central con Tailscale conectado. |
 
 ## Antes de empezar
 
@@ -18,7 +18,7 @@ Si te toca instalar los equipos, seguí la [instalación desde cero](docs/instal
 
 ## 1. Entrá a tu invernáculo
 
-1. Abrí en el navegador el enlace que te dio el docente. Si es un enlace privado de Tailscale, iniciá sesión en la red de la práctica en tu computadora.
+1. Conectá Tailscale, abrí el enlace HTTPS que te dio el docente y guardalo en favoritos.
 2. Ingresá con tu cuenta del panel. El permiso **Técnico** habilita el alta en tu invernáculo.
 3. Abrí **Equipos Zero**, buscá el invernáculo y el equipo que te asignaron y pulsá **Agregar cámara** en su ficha.
 

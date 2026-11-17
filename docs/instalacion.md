@@ -1,6 +1,6 @@
 # Instalación de Microgreen2 desde cero
 
-Seguí esta guía si te asignaron instalar Central y la Zero. Si el docente te dio un panel y una Zero ya vinculados, empezá directamente por la [práctica](../README.md).
+Seguí esta guía si te asignaron instalar Central y la Zero. Si Central ya está instalado y querés entrar con una dirección fija, empezá por [configurar el acceso privado](#3-configurá-el-acceso-privado-a-central). Si ya tenés el enlace del panel y una Zero vinculada, empezá por la [práctica](../README.md).
 
 ## 1. Reuní los datos y abrí PowerShell
 
@@ -27,7 +27,7 @@ $zip = Join-Path $env:USERPROFILE 'Downloads\Microgreen_v2-main.zip'
 $central = Read-Host 'Usuario@IP de Central'
 scp.exe $zip "${central}:Microgreen_v2-main.zip"
 if ($LASTEXITCODE -eq 0) {
-    ssh.exe -o ExitOnForwardFailure=yes -L 127.0.0.1:8766:127.0.0.1:8766 $central
+    ssh.exe $central
 }
 ~~~
 
@@ -48,11 +48,13 @@ En la primera instalación, anotá la contraseña que aparece en **Primer acceso
 curl -fsS http://127.0.0.1:8766/salud
 ~~~
 
-El resultado esperado es `{"estado":"ok","version":"0.5"}`. Dejá abierta la ventana SSH y entrá al [panel de Central](http://127.0.0.1:8766). Iniciá sesión con **admin** y la contraseña de la instalación. En **Mi cuenta** podés cambiarla. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**.
+El resultado esperado es `{"estado":"ok","version":"0.5"}`. Central crea **Vivero piloto** con el nodo **zero01** y el puesto **H1-C01**. Guardá la contraseña de la instalación para el primer acceso por HTTPS.
 
-## 3. Prepará el enlace privado de la Zero a Central
+## 3. Configurá el acceso privado a Central
 
-Para el alta remota, Central y la Zero tienen que estar en la misma red privada de Tailscale. Si los equipos ya figuran en esa red, usá sus accesos actuales. Si Central todavía no tiene Tailscale, ejecutá estos comandos en la terminal de Central y seguí el enlace de ingreso que imprime. El administrador de la red tiene que permitir que la Zero llegue al puerto **8766** de Central. [Instalar Tailscale en Linux](https://tailscale.com/docs/install/linux)
+**El acceso habitual es un favorito del navegador.** Tailscale Serve mantiene una dirección HTTPS en Central para el docente, el estudiante autorizado y las Zero. La configuración se hace una vez en Central.
+
+Si Central todavía necesita Tailscale, ejecutá estos comandos en su terminal y seguí el enlace de ingreso que imprime. [Instalar Tailscale en Linux](https://tailscale.com/docs/install/linux)
 
 ~~~bash
 sudo apt install -y curl ca-certificates &&
@@ -68,7 +70,24 @@ sudo tailscale serve --bg --https=8766 http://127.0.0.1:8766
 tailscale serve status
 ~~~
 
-Si aparece un enlace para habilitar HTTPS en la red, seguí ese enlace y repetí el comando. Copiá la URL HTTPS completa de Central, incluido el puerto que muestre. [Tailscale Serve](https://tailscale.com/docs/reference/tailscale-cli/serve)
+Si aparece un enlace para habilitar HTTPS en la red, seguí ese enlace y repetí el comando. Copiá la dirección HTTPS que figura como **Available within your tailnet**, con el puerto **8766**. La opción `--bg` mantiene el acceso activo al cerrar SSH y lo vuelve a levantar cuando reinicia el servidor. [Tailscale Serve](https://tailscale.com/docs/reference/tailscale-cli/serve)
+
+1. En tu computadora o celular, conectá Tailscale y abrí esa dirección en el navegador. El acceso debe estar autorizado en tu red de Tailscale.
+2. Ingresá con tu cuenta de Central. En el primer acceso de una instalación nueva, usá **admin** y la contraseña que imprimió el instalador. Las actualizaciones conservan la contraseña anterior. En **Mi cuenta** podés cambiarla.
+3. Guardá el enlace como **MicroGreenVision Central** en favoritos. Usá la misma dirección en el campo `url` de cada Zero vinculada a este servidor y autorizá su acceso al puerto **8766** en Tailscale.
+
+Para comprobar el enlace, agregá `/salud` a la dirección HTTPS. El navegador debería mostrar `{"estado":"ok","version":"0.5"}`.
+
+### Recuperá el acceso de admin
+
+Si olvidaste la contraseña de `admin`, ejecutá estos comandos en **PowerShell**.
+
+~~~powershell
+$central = Read-Host 'Usuario@IP de Central'
+ssh.exe -t $central 'cd ~/MicroGreenVision_Central && /usr/bin/python3 -m mgv_central clave-admin'
+~~~
+
+Ingresá la contraseña SSH del usuario de Central. El comando genera una nueva contraseña para `admin`, la muestra en la terminal y cierra sus sesiones abiertas. Copiá la nueva contraseña e ingresá al panel con `admin`. Podés cambiarla desde **Mi cuenta**.
 
 ## 4. Copiá el ZIP y la credencial a la Zero
 
@@ -124,7 +143,9 @@ Si la Zero sigue sin enlace, consultá el registro desde su terminal.
 journalctl --user -u microgreen-zero-central-altas.service -n 25 --no-pager
 ~~~
 
-Si cerraste la sesión de Central y querés volver al panel local, abrí el túnel desde **PowerShell** y mantené la ventana abierta.
+## Diagnóstico por SSH
+
+Si necesitás comprobar el panel local desde Windows durante la configuración de HTTPS, podés abrir un túnel temporal desde PowerShell. Mientras esté abierto, el panel queda disponible en `http://127.0.0.1:8766`.
 
 ~~~powershell
 $central = Read-Host 'Usuario@IP de Central'

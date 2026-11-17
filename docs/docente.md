@@ -19,12 +19,12 @@ Para actualizar un Central existente, descargá el ZIP actual y ejecutá de nuev
 
 ## 3. Prepará su cuenta en Central
 
-El acceso al código y el acceso al panel se crean por separado. En **Central**, ingresá como administrador.
+Verificá que Central abra con su [enlace privado de Tailscale](instalacion.md#3-configurá-el-acceso-privado-a-central). En el panel, ingresá como administrador.
 
 1. Abrí **Administración → Nueva cuenta**. Creá una cuenta para el estudiante, por ejemplo **estudiante**, con una contraseña inicial de al menos 12 caracteres. Dejá desmarcada la opción **Administrador de todos los sitios**.
 2. En **Permisos por sitio**, elegí su cuenta y el invernáculo asignado. Seleccioná **Técnico** y pulsá **Guardar acceso**.
 3. Confirmá que en **Equipos Zero** la Raspberry esté disponible y que el puesto elegido esté libre. Si el agente o el servidor todavía requieren instalación, seguí la [instalación desde cero](instalacion.md).
-4. Compartí en privado el enlace del panel, la cuenta y la contraseña inicial. Indicá el invernáculo, la Zero, el puesto y la cámara que tiene que usar. Si el panel está servido por Tailscale, autorizá el acceso del estudiante a Central en la red de la práctica.
+4. Autorizá al estudiante a llegar a Central por Tailscale. Compartile en privado el enlace HTTPS, su cuenta de Central y la contraseña inicial. Indicá el invernáculo, la Zero, el puesto y la cámara que tiene que usar.
 
 El estudiante completa la guía del README y muestra la primera foto de su puesto en **Ver historial**.
 
