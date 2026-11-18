@@ -33,6 +33,10 @@ def crear_configuracion():
                 },
             ],
         }
+        # Solo importar el catálogo piloto cuando ya existe una entrada de fotos real.
+        entrada_legacy = Path.home() / "microgreen-inbox" / "zero01"
+        if not entrada_legacy.is_dir() or not next(entrada_legacy.glob("*/*/*.jpg"), None):
+            contenido["viveros"] = []
         ruta.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
         with ruta.open("x", encoding="utf-8") as salida:
             json.dump(contenido, salida, ensure_ascii=False, indent=2)
@@ -114,3 +118,4 @@ def preparar():
     if clave:
         print(f"Primer acceso al panel · Usuario admin · Contraseña {clave}", flush=True)
     print("Base y catálogo de MicroGreenVision Central preparados.", flush=True)
+

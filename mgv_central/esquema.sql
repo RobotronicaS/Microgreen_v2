@@ -271,10 +271,10 @@ CREATE UNIQUE INDEX IF NOT EXISTS vinculacion_host_abierta ON vinculaciones_zero
     WHERE estado IN ('pendiente', 'en_curso');
 
 ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_tipo_check;
-ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_tipo_check CHECK (tipo IN ('buscar', 'agregar', 'capturar'));
+ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_tipo_check CHECK (tipo IN ('buscar', 'agregar', 'capturar', 'reconfigurar'));
 ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_check;
 ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_check
-    CHECK ((tipo IN ('agregar', 'capturar')) = (camara_id IS NOT NULL));
+    CHECK ((tipo IN ('agregar', 'capturar', 'reconfigurar')) = (camara_id IS NOT NULL));
 
 CREATE TABLE IF NOT EXISTS mantenimiento (
     id text PRIMARY KEY,
@@ -308,3 +308,14 @@ CREATE TABLE IF NOT EXISTS solicitudes_acceso (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS solicitud_acceso_pendiente ON solicitudes_acceso (nombre)
     WHERE estado = 'pendiente';
+
+
+-- v1.0: distribución gráfica, sin modificar fotos ni credenciales existentes.
+ALTER TABLE camaras ADD COLUMN IF NOT EXISTS plano_x real CHECK (plano_x BETWEEN 0.07 AND 0.93);
+ALTER TABLE camaras ADD COLUMN IF NOT EXISTS plano_y real CHECK (plano_y BETWEEN 0.07 AND 0.93);
+ALTER TABLE nodos ADD COLUMN IF NOT EXISTS plano_x real CHECK (plano_x BETWEEN 0.07 AND 0.93);
+ALTER TABLE nodos ADD COLUMN IF NOT EXISTS plano_y real CHECK (plano_y BETWEEN 0.07 AND 0.93);
+ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_tipo_check;
+ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_tipo_check CHECK (tipo IN ('buscar', 'agregar', 'capturar', 'reconfigurar'));
+ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_check;
+ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_check CHECK ((tipo IN ('agregar', 'capturar', 'reconfigurar')) = (camara_id IS NOT NULL));

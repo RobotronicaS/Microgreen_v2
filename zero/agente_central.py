@@ -24,7 +24,7 @@ COLA = RAIZ / "pendientes"
 NOMBRE = re.compile(r"\d{8}T\d{6}_\d{6}Z\.jpg")
 POLITICA = RAIZ / "central_politica.json"
 TURNOS = RAIZ / "central_turnos.json"
-INTERVALOS = (15, 30, 60, 120, 240)
+INTERVALOS = (1, 2, 5, 10, 15, 30, 60, 120, 240)
 
 
 class SinRedireccion(HTTPRedirectHandler):
@@ -141,7 +141,7 @@ def informe(lista, envio):
             camaras[camara] = ultimo if ultimo in ("ok", "error", "pausada") else "sin_configurar"
     antigua = datetime.strptime(lista[0].name, "%Y%m%dT%H%M%S_%fZ.jpg").replace(tzinfo=timezone.utc).isoformat() if lista else None
     return {"libres_bytes": shutil.disk_usage(RAIZ).free, "pendientes": len(lista),
-            "mas_antigua": antigua, "camaras": camaras, "envio": envio, "capacidades": ["capturar"]}
+            "mas_antigua": antigua, "camaras": camaras, "envio": envio, "capacidades": ["capturar", "reconfigurar", "intervalos_v1"], "version": "1.0.0"}
 
 
 def entregar_jpg(datos, foto):
@@ -216,3 +216,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

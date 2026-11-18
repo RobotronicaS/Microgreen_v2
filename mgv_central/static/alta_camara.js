@@ -28,13 +28,9 @@
 
   function actualizarCampos() {
     const disponible = nodo.selectedOptions[0]?.dataset.disponible === 'si';
-    for (const opcion of puesto.options) {
-      opcion.disabled = opcion.dataset.nodo !== nodo.value || ocupados.has(opcion.value);
-      opcion.hidden = opcion.disabled;
-    }
-    if (!puesto.selectedOptions[0] || puesto.selectedOptions[0].disabled) {
-      const libre = Array.from(puesto.options).find(opcion => !opcion.disabled);
-      puesto.selectedIndex = libre ? libre.index : -1;
+    if (!puesto.value && !puesto.readOnly) {
+      const libre = Array.from(formulario.querySelectorAll('[data-opciones-puestos] option')).find(opcion => opcion.dataset.nodo === nodo.value && !ocupados.has(opcion.value));
+      puesto.value = libre?.value || '';
     }
     const esRtsp = campo('tipo').value === 'rtsp';
     elemento('perfil').hidden = elemento('perfil').disabled = esRtsp;
@@ -145,7 +141,7 @@
           if (alta.miniatura) {
             foto.src = alta.miniatura;
             foto.hidden = false;
-            mostrar('Cámara ' + alta.camara + ' agregada. Central recibió la primera foto.', 'ok');
+            mostrar('Cámara ' + alta.camara + ': configuración comprobada. Central recibió la foto.', 'ok');
           } else {
             mostrar('Puesto ' + alta.camara + ' registrado. Podés seguir la llegada del primer JPG en el historial.');
           }
@@ -169,7 +165,7 @@
   }
 
   async function solicitar(accion) {
-    if (enCurso || (accion === 'agregar' && agregar.disabled)) return;
+    if (enCurso || (accion !== 'buscar' && agregar.disabled)) return;
     const datos = accion === 'buscar' ? new URLSearchParams({
       csrf: campo('csrf').value,
       nodo: nodo.value,
@@ -184,7 +180,7 @@
     try {
       const alta = await leer(formulario.dataset.api, { method: 'POST', body: datos });
       recordar(alta.id);
-      if (accion === 'agregar') {
+      if (accion !== 'buscar') {
         campo('clave_camara').value = '';
         campo('rtsp').value = '';
       }
@@ -203,17 +199,19 @@
   campo('tipo').addEventListener('change', actualizarCampos);
   formulario.addEventListener('submit', evento => {
     evento.preventDefault();
-    solicitar('agregar');
+    solicitar(formulario.dataset.reconfigurar === 'si' ? 'reconfigurar' : 'agregar');
   });
   buscar.addEventListener('click', () => solicitar('buscar'));
   otra.addEventListener('click', () => {
     recordar('');
     terminada = false;
     estado.hidden = true;
-    campo('nombre').value = campo('ip').value = '';
+    if (!puesto.readOnly) { campo('nombre').value = puesto.value = ''; }
+    campo('ip').value = '';
     actualizarCampos();
     puesto.focus();
   });
   actualizarCampos();
   if (solicitud) consultar();
 })();
+

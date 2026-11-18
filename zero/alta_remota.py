@@ -39,10 +39,10 @@ def validar_red(url):
     raise ValueError("La IP de la cámara debe estar en la red local de la Zero.")
 
 
-def configurar(raiz, camara):
+def configurar(raiz, camara, reemplazar=False):
     config = cargar_config(raiz / "config.json")
     anterior = next((c for c in config["camaras"] if c["id"] == camara["id"]), None)
-    if anterior and flujo(anterior["rtsp"]) != flujo(camara["rtsp"]):
+    if anterior and not reemplazar and flujo(anterior["rtsp"]) != flujo(camara["rtsp"]):
         raise ValueError("Ese puesto ya tiene otra cámara en la Zero. Elegí otro puesto.")
     repetida = next((c for c in config["camaras"] if c["id"] != camara["id"]
                      and flujo(c["rtsp"]) == flujo(camara["rtsp"])), None)
@@ -86,7 +86,7 @@ def finalizar(raiz, peticion, diario, operacion):
     prueba = detalle_local(raiz / ".pruebas-camara" / alta, camara["id"], nombre)
     cola = detalle_local(raiz / "pendientes", camara["id"], nombre)
     try:
-        config = configurar(raiz, camara) if operacion.get("tipo", "agregar") == "agregar" else None
+        config = configurar(raiz, camara, reemplazar=operacion.get("tipo") == "reconfigurar") if operacion.get("tipo", "agregar") in ("agregar", "reconfigurar") else None
     except ValueError as error:
         confirmar(peticion, alta, {"ok": False, "mensaje": str(error)})
         eliminar_prueba(prueba)
@@ -130,11 +130,11 @@ def probar(raiz, peticion, diario, solicitud):
     if not ID_CAMARA.fullmatch(codigo):
         raise ValueError("Puesto inválido.")
     url = perfil["rtsp"]
-    camara = {"id": codigo, "nombre": solicitud["nombre"], "tipo": perfil["tipo"], "rtsp": url}
+    camara = {"id": codigo, "nombre": solicitud["nombre"], "tipo": perfil["tipo"], "rtsp": url, **{k: perfil[k] for k in ("transporte", "rotacion", "ancho", "espera") if k in perfil}}
     with bloquear_ciclo(raiz):
         try:
             url_rtsp(url, codigo)
-            configurar(raiz, camara)
+            configurar(raiz, camara, reemplazar=solicitud["tipo"] == "reconfigurar")
             validar_red(camara["rtsp"])
             if shutil.disk_usage(raiz).free < MIN_FREE_BYTES:
                 raise ValueError("La Zero tiene menos de 256 MiB libres.")
@@ -149,7 +149,7 @@ def probar(raiz, peticion, diario, solicitud):
             if foto is None:
                 confirmar(peticion, alta, {"ok": False, "mensaje": detalle})
                 return
-        operacion = {"id": alta, "camara": camara, "foto": foto.name}
+        operacion = {"tipo": solicitud["tipo"], "id": alta, "camara": camara, "foto": foto.name}
         guardar_json(diario, operacion)
         return finalizar(raiz, peticion, diario, operacion)
 
@@ -174,7 +174,7 @@ def atender_altas(raiz, peticion):
             resultado = {"ok": False, "mensaje": "Revisá que la Zero esté conectada al Wi-Fi del invernáculo."}
         confirmar(peticion, alta, resultado)
         return
-    if solicitud["tipo"] == "agregar":
+    if solicitud["tipo"] in ("agregar", "reconfigurar"):
         return probar(raiz, peticion, diario, solicitud)
     if solicitud["tipo"] == "capturar":
         return capturar_actual(raiz, peticion, diario, solicitud)
@@ -204,3 +204,4 @@ def capturar_actual(raiz, peticion, diario, solicitud):
         operacion = {"tipo": "capturar", "id": solicitud["id"], "camara": {"id": codigo}, "foto": foto.name}
         guardar_json(diario, operacion)
         return finalizar(raiz, peticion, diario, operacion)
+

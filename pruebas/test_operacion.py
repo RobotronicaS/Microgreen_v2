@@ -202,7 +202,7 @@ def test_captura_manual_conserva_configuracion_y_entrega_foto(sistema, monkeypat
         assert llamadas_captura[0]["rtsp"] == local["camaras"][0]["rtsp"]
         assert (zero / "config.json").read_bytes() == config_antes
         assert not (zero / "alta_camara.json").exists()
-        assert agente.informe([pendiente], "ok")["capacidades"] == ["capturar"]
+        assert set(agente.informe([pendiente], "ok")["capacidades"]) == {"capturar", "reconfigurar", "intervalos_v1"}
         monkeypatch.setattr(agente, "llamar", lambda datos, ruta, contenido=None, tipo="application/json": peticion(ruta, contenido, tipo))
         agente.entregar_jpg({}, pendiente)
         assert not pendiente.exists()
@@ -382,3 +382,4 @@ def test_respaldo_real_se_verifica_y_se_restaura_en_otra_base(sistema):
 
 def test_diez_invernaculos_ciento_cincuenta_camaras(entorno):
     comprobar(entorno.config)
+

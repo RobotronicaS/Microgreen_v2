@@ -2,8 +2,8 @@
 {% block contenido %}
 <p class="ruta"><a href="/viveros/{{ sitio.id }}">{{ sitio.nombre }}</a>
   {% if nodo_fijado %} / <a href="/equipos-zero?vivero={{ sitio.id }}#zero-{{ sitio.id }}.{{ nodo_fijado.id }}">{{ nodo_fijado.nombre }}</a>{% endif %} / Agregar cámara</p>
-<div class="titulo"><h1>Agregar cámara</h1></div>
-<form method="post" action="/api/viveros/{{ sitio.id }}/altas" class="alta-camara" data-alta data-api="/api/viveros/{{ sitio.id }}/altas" data-solicitud="{{ solicitud }}">
+<div class="titulo"><h1>{{ "Cambiar conexión de " ~ reconfigurar.nombre if reconfigurar else "Agregar cámara" }}</h1></div>
+<form method="post" action="/api/viveros/{{ sitio.id }}/altas" class="alta-camara" data-alta data-api="/api/viveros/{{ sitio.id }}/altas" data-solicitud="{{ solicitud }}" data-reconfigurar="{{ 'si' if reconfigurar else 'no' }}">
   <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
   <section class="panel alta-red">
     <h2>Red del invernáculo</h2>
@@ -12,7 +12,7 @@
       <select name="nodo" required>
         {% for n in nodos %}
         <option value="{{ n.id }}" data-disponible="{{ 'si' if n.disponible else 'no' }}"
-                {% if n == preferida %}selected{% endif %}>{{ n.nombre }}{% if not n.disponible %} · sin enlace de alta{% endif %}</option>
+                {% if (reconfigurar and n.id == reconfigurar.nodo_id) or (not reconfigurar and n == preferida) %}selected{% endif %}>{{ n.nombre }}{% if not n.disponible %} · sin enlace de alta{% endif %}</option>
         {% endfor %}
       </select>
     </label>
@@ -27,22 +27,18 @@
   <section class="panel alta-datos">
     <h2>Datos de la cámara</h2>
     <div class="campos alta-campos">
-      <label>Puesto
-        <select name="camara" required>
-          {% for nodo, opciones in puestos.items() %}
-          {% for p in opciones %}
-          <option value="{{ p.id }}" data-nodo="{{ nodo }}">{{ p.id }}{% if p.nombre != p.id %} · {{ p.nombre }}{% endif %}{% if p.de_plantilla %} · libre de la plantilla{% endif %}</option>
-          {% endfor %}
-          {% endfor %}
-        </select>
+      <label>Código de cámara
+        <input name="camara" list="puestos-disponibles" required maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]{0,31}" value="{{ reconfigurar.id if reconfigurar else '' }}" {{ 'readonly' if reconfigurar }} placeholder="Ej.: CAM016">
+        <datalist id="puestos-disponibles" data-opciones-puestos>{% for nodo, opciones in puestos.items() %}{% for p in opciones %}<option value="{{ p.id }}" data-nodo="{{ nodo }}">{{ p.nombre }}</option>{% endfor %}{% endfor %}</datalist>
       </label>
-      <label>Nombre (opcional)<input name="nombre" maxlength="80" placeholder="Entrada de la hilera"></label>
+      <label>Nombre<input name="nombre" maxlength="80" value="{{ reconfigurar.nombre if reconfigurar else '' }}" placeholder="Entrada de la hilera"></label>
+      <label>Hilera / ubicación<input name="hilera" maxlength="25" value="{{ reconfigurar.hilera if reconfigurar else '' }}" placeholder="Ej.: Hilera 4"></label>
     </div>
     <label>Tipo de cámara
       <select name="tipo">
         <option value="tapo">Tapo</option>
         <option value="hikvision">Hikvision</option>
-        <option value="rtsp">Otra cámara RTSP</option>
+        <option value="dahua">Dahua / canal RTSP</option><option value="rtsp">Otra cámara IP / IR por RTSP</option>
       </select>
     </label>
     <fieldset class="alta-perfil" data-alta-perfil>
@@ -54,6 +50,7 @@
         <label>Usuario de cámara<input name="usuario_camara" maxlength="128" autocomplete="off" required></label>
         <label>Contraseña de cámara<input name="clave_camara" type="password" maxlength="256" autocomplete="new-password" required></label>
       </div>
+      <label>Canal de cámara o grabador<input name="canal" type="number" value="1" min="1" max="64"></label>
       <label>Calidad de captura
         <select name="perfil"><option value="secundario">Estándar</option><option value="principal">Alta</option></select>
       </label>
@@ -64,8 +61,9 @@
         <input name="rtsp" type="password" autocomplete="new-password" maxlength="4096" placeholder="rtsp://usuario:clave@IP:554/ruta" required>
       </label>
     </fieldset>
-    <p class="muted alta-ayuda" data-alta-sin-puestos hidden>Esta Zero no tiene puestos disponibles en el plano de 15 cámaras.</p>
-    <button type="submit" class="boton primario" data-alta-guardar disabled>Probar y agregar</button>
+    <details><summary>Opciones de imagen y conexión</summary><p class="muted">Requieren agente Zero 1.0. La visión infrarroja se configura en la cámara.</p><div class="campos"><label>Transporte RTSP<select name="transporte"><option value="tcp">TCP · recomendado</option><option value="udp">UDP</option></select></label><label>Orientación<select name="rotacion"><option value="0">Sin girar</option><option value="90">90°</option><option value="180">180°</option><option value="270">270°</option></select></label><label>Ancho máximo del JPG<select name="ancho"><option value="0">Original</option><option value="640">640 px</option><option value="1280">1280 px</option><option value="1920">1920 px</option></select></label><label>Tiempo de espera (s)<input name="espera" type="number" min="5" max="60" value="30"></label></div></details>
+    <p class="muted alta-ayuda" data-alta-sin-puestos hidden>Ingresá un código nuevo de hasta 32 letras, números o guiones.</p>
+    <button type="submit" class="boton primario" data-alta-guardar disabled>{{ "Probar y actualizar conexión" if reconfigurar else "Probar y agregar" }}</button>
   </section>
 
   <section class="panel alta-resultado" data-alta-resultado hidden aria-label="Resultado del alta">
@@ -73,10 +71,11 @@
     <img data-alta-foto alt="Primera captura de la cámara nueva" hidden>
     <div class="acciones">
       <a class="boton" data-alta-historial hidden>Ver historial</a>
-      <button type="button" class="boton primario" data-alta-otra hidden>Agregar otra cámara</button>
+      <button type="button" class="boton primario" data-alta-otra hidden>{{ "Volver a configurar" if reconfigurar else "Agregar otra cámara" }}</button>
     </div>
   </section>
   <noscript><p class="aviso">Habilitá JavaScript para buscar y probar cámaras desde Central.</p></noscript>
 </form>
 <script defer src="/static/alta_camara.js"></script>
 {% endblock %}
+

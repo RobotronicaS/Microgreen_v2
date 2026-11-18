@@ -1,30 +1,7 @@
-<!doctype html>
-<html lang="es-UY">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if titulo %}{{ titulo }} · {% endif %}MicroGreenVision Central</title>
-  <link rel="stylesheet" href="/static/panel.css">
-  <script defer src="/static/panel.js"></script>
-</head>
-<body>
-<header class="cabecera">
-  <div class="envoltura cabecera-interior">
-    <a href="/" class="marca">MicroGreenVision <span>Central</span> <small class="version-app">v{{ version }}</small></a>
-    {% if usuario %}
-    <nav aria-label="Secciones">
-      <a href="/">Invernáculos</a><a href="/equipos-zero"{% if request.url.path == '/equipos-zero' %} aria-current="page"{% endif %}>Equipos Zero</a><a href="/alertas">Alertas</a><a href="/supervisor"{% if request.url.path in ('/supervisor', '/diagnostico') %} aria-current="page"{% endif %}>Supervisor</a>
-      <a href="/trabajos">Procesamiento</a>{% if usuario.administrador %}<a href="/mantenimiento">Avisos y respaldos</a><a href="/gestion">Administración</a>{% endif %}
-    </nav>
-    <div class="sesion">
-      <a href="/cuenta">{{ usuario.nombre }}</a>
-      <form method="post" action="/salir"><input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton claro" type="submit">Salir</button></form>
-    </div>
-    {% endif %}
-  </div>
-</header>
-<main class="envoltura {% block clase_main %}{% endblock %}">
-  {% block contenido %}{% endblock %}
-</main>
-</body>
-</html>
+{% from 'ui.html' import icon %}
+<!doctype html><html lang="es-UY"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{% if titulo %}{{ titulo }} · {% endif %}MicroGreenVision</title><link rel="stylesheet" href="/static/panel.css"><link rel="stylesheet" href="/static/visual.css"><script defer src="/static/panel.js"></script></head>
+<body class="{{ 'autenticado' if usuario else 'sin-sesion' }}">
+{% if usuario %}
+<aside class="sidebar"><a class="brand" href="/"><span class="brandmark">⌁</span><span>microgreen<span class="brand-sub">VISION</span></span></a><div class="workspace-label">ESPACIO DE TRABAJO</div><nav aria-label="Secciones"><a href="/"{% if request.url.path == '/' or request.url.path.startswith('/viveros/') %} class="active"{% endif %}>{{ icon('greenhouse') }} Invernáculos</a><a href="/alertas"{% if request.url.path == '/alertas' %} class="active"{% endif %}>{{ icon('bell') }} Avisos</a><a href="/configuracion"{% if request.url.path in ('/configuracion','/gestion','/mantenimiento','/equipos-zero','/supervisor','/trabajos') %} class="active"{% endif %}>{{ icon('settings') }} Configuración</a></nav><div class="sidebar-guide"><div class="small-icon">{{ icon('cursor') }}</div><strong>Explorá con un clic</strong><p>Invernáculo → equipo → cámara.<br>Todo en su lugar.</p><a class="text-button" href="/">Ver mis invernáculos →</a></div><div class="sidebar-bottom"><span class="avatar">{{ usuario.nombre[:2]|upper }}</span><div><a href="/cuenta"><strong>{{ usuario.nombre }}</strong></a><span>{{ 'Administrador' if usuario.administrador else 'Mi cuenta' }}</span></div><form method="post" action="/salir"><input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="text-button">Salir</button></form></div></aside>
+{% endif %}
+<div class="app-shell"><header class="topbar"><div><a href="/">MicroGreenVision Central</a>{% if titulo %} / {{ titulo }}{% endif %}</div><div class="topbar-right"><span class="demo-chip">v{{ version }}</span>{% if usuario %}<a href="/cuenta">Mi cuenta</a>{% endif %}</div></header><main class="envoltura {% block clase_main %}{% endblock %}" id="main">{% block contenido %}{% endblock %}</main><footer>MicroGreenVision Central · v{{ version }}<span>Invernáculos · equipos · cámaras</span></footer></div></body></html>

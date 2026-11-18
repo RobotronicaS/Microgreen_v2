@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from hashlib import sha256
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import shutil
@@ -175,7 +176,7 @@ def informe_estado(conexion, vivero, nodo, datos):
             raise ValueError("Fecha de cola sin zona horaria.")
         reporte["mas_antigua"] = fecha.isoformat()
     estados = datos.get("camaras", {})
-    if not isinstance(estados, dict) or len(estados) > 150:
+    if not isinstance(estados, dict):
         raise ValueError("Estado de cámaras inválido.")
     permitidas = {fila["id"] for fila in conexion.execute(
         "SELECT id FROM camaras WHERE vivero_id = %s AND nodo_id = %s", (vivero, nodo),
@@ -188,7 +189,10 @@ def informe_estado(conexion, vivero, nodo, datos):
     capacidades = datos.get("capacidades", [])
     if not isinstance(capacidades, list) or len(capacidades) > 8:
         raise ValueError("Capacidades de la Zero inválidas.")
-    reporte["capacidades"] = ["capturar"] if "capturar" in capacidades else []
+    reporte["capacidades"] = [c for c in ("capturar", "reconfigurar", "intervalos_v1") if c in capacidades]
+    version = datos.get("version")
+    if isinstance(version, str) and re.fullmatch(r"[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}", version):
+        reporte["version"] = version
     conexion.execute(
         "UPDATE nodos SET ultimo_contacto = now(), reporte = %s WHERE vivero_id = %s AND id = %s",
         (Jsonb(reporte), vivero, nodo),
@@ -229,3 +233,4 @@ async def lecturas(peticion: Request, vivero: str, nodo: str):
     return await run_in_threadpool(
         registrar_lecturas, cargar_configuracion(), peticion, vivero, nodo, await json_limitado(peticion),
     )
+

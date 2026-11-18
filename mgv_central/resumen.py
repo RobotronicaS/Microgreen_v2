@@ -79,7 +79,7 @@ def resumen_camaras(conexion, viveros, ahora=None):
         )) if camara["activa"] else 0
         vivero["camaras"].append({**camara, "estado": estado, "etiqueta": etiqueta, "esperadas": esperadas})
     nodos = conexion.execute(
-        """SELECT vivero_id, id, nombre, ultimo_contacto, autorizado_en, alta_en, reporte,
+        """SELECT vivero_id, id, nombre, plano_x, plano_y, ultimo_contacto, autorizado_en, alta_en, reporte,
            token_sha IS NOT NULL AS enlazado, entrada_legacy IS NOT NULL AS tiene_entrada
         FROM nodos WHERE vivero_id = ANY(%s) ORDER BY id""", (ids,),
     ).fetchall()
@@ -94,3 +94,4 @@ def resumen_camaras(conexion, viveros, ahora=None):
         vivero["esperadas"] = sum(c["esperadas"] for c in fichas)
         vivero["ultima"] = max((c["capturada_en"] for c in fichas if c["capturada_en"]), default=None)
     return list(sitios.values())
+

@@ -68,6 +68,21 @@ def url_rtsp(valor, identificador):
     raise ValueError(f"{identificador} necesita una URL rtsp:// válida.")
 
 
+def opciones_captura(camara):
+    transporte = camara.get("transporte", "tcp")
+    rotacion = camara.get("rotacion", 0)
+    ancho = camara.get("ancho", 0)
+    espera = camara.get("espera", CAPTURE_TIMEOUT)
+    if (transporte not in ("tcp", "udp") or type(rotacion) is not int or rotacion not in (0, 90, 180, 270)
+            or type(ancho) is not int or ancho not in (0, 640, 1280, 1920)
+            or type(espera) is not int or not 5 <= espera <= 60):
+        raise ValueError("Opciones de captura inválidas.")
+    filtros = {0: [], 90: ["transpose=1"], 180: ["hflip", "vflip"], 270: ["transpose=2"]}[rotacion]
+    if ancho:
+        filtros.append(f"scale=w='min({ancho},iw)':h=-2")
+    return transporte, filtros, espera
+
+
 def cargar_config(ruta):
     config = json.loads(ruta.read_text(encoding="utf-8-sig"))
     camaras = config["camaras"]
@@ -83,6 +98,7 @@ def cargar_config(ruta):
             raise ValueError("Cada cámara necesita un identificador distinto.")
         ids.add(identificador)
         url_rtsp(camara["rtsp"], identificador)
+        opciones_captura(camara)
         if not isinstance(camara.get("nombre", ""), str):
             raise ValueError(f"El nombre de {identificador} debe ser texto.")
 
@@ -141,15 +157,17 @@ def capturar(camara, cola):
     carpeta.mkdir(parents=True, exist_ok=True)
     jpg = carpeta / momento.strftime("%Y%m%dT%H%M%S_%fZ.jpg")
     temporal = jpg.with_suffix(".part")
+    transporte, filtros, espera = opciones_captura(camara)
     comando = [
         "ffmpeg", "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
-        "-rtsp_transport", "tcp", "-threads", "1", "-i", camara["rtsp"],
+        "-rtsp_transport", transporte, "-threads", "1", "-i", camara["rtsp"],
+        *(["-vf", ",".join(filtros)] if filtros else []),
         "-map", "0:v:0", "-frames:v", "1", "-threads", "1", "-q:v", "2",
         "-f", "image2", "-update", "1", str(temporal),
     ]
     try:
         resultado = subprocess.run(
-            comando, timeout=CAPTURE_TIMEOUT,
+            comando, timeout=espera,
             stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
         )
         if resultado.returncode or not temporal.is_file() or temporal.stat().st_size < 4:
@@ -170,7 +188,7 @@ def capturar(camara, cola):
         temporal.replace(jpg)
         return jpg, "JPG guardado."
     except subprocess.TimeoutExpired:
-        return None, f"La cámara no respondió con un JPG en {CAPTURE_TIMEOUT} s."
+        return None, f"La cámara no respondió con un JPG en {espera} s."
     except OSError:
         return None, "Revisá FFmpeg y los permisos de escritura."
     finally:
@@ -342,3 +360,4 @@ def main():
 
 if __name__ == "__main__":
     raise SystemExit(main())
+

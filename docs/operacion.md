@@ -1,3 +1,5 @@
+> Para la interfaz ilustrada y las opciones de la versión 1.0, empezá por [Instalación y uso de Central 1.0](version_1.md). Los pasos siguientes conservan la documentación de las versiones anteriores.
+
 # Operación de MicroGreenVision Central v0.8.0
 
 Abrí el enlace HTTPS habitual con Tailscale conectado. Central conserva las cuentas y las cámaras al actualizarse. La instalación se comprueba en `/salud`, que debe mostrar `{"estado":"ok","version":"0.8.0"}`.
@@ -73,3 +75,4 @@ PYTHONPATH="$PWD" /usr/bin/python3 -m pytest -q pruebas
 Ejecutá las pruebas con tu usuario Linux habitual. Si PostgreSQL está instalado en otra ubicación, indicá su carpeta de binarios mediante `MGV_TEST_PG_BIN`. Una prueba omitida por falta de dependencias no cuenta como una comprobación aprobada.
 
 El ensayo de 150 cámaras verifica el programa con cargas simuladas. Antes de habilitar los diez invernáculos, probá un invernáculo completo y medí tiempos de captura, envío, almacenamiento y uso de CPU con el hardware y la red reales.
+

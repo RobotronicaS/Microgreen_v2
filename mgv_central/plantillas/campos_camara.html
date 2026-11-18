@@ -1,0 +1,15 @@
+{% macro campos(c=none, nodos=nodos, intervalos=intervalos) %}
+<div class="campos">
+  <label>Puesto <input name="id" required maxlength="32" value="{{ c.id if c else '' }}" {{ 'readonly' if c }} placeholder="H1-C02"></label>
+  <label>Nombre <input name="nombre" required maxlength="80" value="{{ c.nombre if c else '' }}"></label>
+  <label>Hilera <input name="hilera" maxlength="25" value="{{ c.hilera if c else '1' }}"></label>
+  <label>Equipo de captura <select name="nodo" required>{% for n in nodos %}
+    <option value="{{ n.id }}" {{ 'selected' if c and c.nodo_id == n.id }} {{ 'disabled' if c and c.nodo_id != n.id }}>{{ n.nombre }}</option>{% endfor %}</select></label>
+  <label>Frecuencia <select name="intervalo">{% for i in intervalos %}
+    <option value="{{ i }}" {{ 'selected' if i == (c.intervalo if c else 30) }}>{{ i }} min</option>{% endfor %}</select></label>
+  <label>Atraso (min) <input name="atraso" type="number" min="5" max="1440" required value="{{ c.atraso_minutos if c else 65 }}"></label>
+  <label>Desde <input name="desde" type="time" required value="{{ c.desde.strftime('%H:%M') if c else '00:00' }}"></label>
+  <label>Hasta <input name="hasta" type="time" required value="{{ c.hasta.strftime('%H:%M') if c else '00:00' }}"></label>
+</div>
+<label class="marcar"><input type="checkbox" name="activa" value="si" {{ 'checked' if not c or c.activa }}> Captura activa</label>
+{% endmacro %}

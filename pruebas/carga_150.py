@@ -293,7 +293,7 @@ def comprobar_segunda_zero(cliente, config, sitio, csrf, token_primera):
     alta = cliente.get(f"/viveros/{sitio}/alta-camara?nodo=zero02")
     assert alta.status_code == 200 and 'data-nodo="zero02"' in alta.text
     assert 'data-nodo="zero01"' not in alta.text
-    assert "H1-C02 · libre de la plantilla" in alta.text
+    assert 'value="H1-C02" data-nodo="zero02"' in alta.text
     assert 'value="H1-C01"' not in alta.text
 
     formulario = dict(csrf=csrf, nodo="zero02", accion="agregar", tipo="tapo", ip="192.168.1.52",
@@ -356,3 +356,4 @@ def main():
 if __name__ == "__main__":
     os.umask(0o077)
     sys.exit(main())
+

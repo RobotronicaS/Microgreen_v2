@@ -1,3 +1,5 @@
+> Para la interfaz ilustrada y las opciones de la versión 1.0, empezá por [Instalación y uso de Central 1.0](version_1.md). Los pasos siguientes conservan la documentación de las versiones anteriores.
+
 # Microgreen2 para el docente
 
 La práctica usa **un estudiante, una cuenta de tipo Técnico, una Zero y una cámara**. Podés usar el invernáculo que ya tenés preparado y asignarle un puesto disponible.
@@ -46,3 +48,4 @@ cd "$HOME/mgv-fuentes/Microgreen_v2-main" &&
 MGV_CENTRAL_CONFIG="$HOME/MicroGreenVision_Central/config.json" \
 PYTHONPATH="$PWD" /usr/bin/python3 pruebas/carga_150.py
 ~~~
+

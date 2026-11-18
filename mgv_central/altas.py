@@ -21,7 +21,7 @@ from .gestion import registrar_origenes
 from .ingesta import guardar_archivo
 from .receptor import autenticar, json_limitado, nombre_jpg
 from .resumen import alta_disponible, captura_disponible
-from .web import datos_formulario, fila, pagina, sitio
+from .web import datos_formulario, fila, pagina, sitio, puesto as leer_puesto
 
 rutas = APIRouter()
 ID_ALTA = re.compile(r"[a-f0-9]{32}")
@@ -76,6 +76,19 @@ def ipv4_camara(valor):
     return str(ip)
 
 
+def opciones_imagen(datos):
+    transporte = datos.get("transporte", "tcp")
+    try:
+        rotacion = int(datos.get("rotacion", "0"))
+        ancho = int(datos.get("ancho", "0"))
+        espera = int(datos.get("espera", "30"))
+    except (ValueError, TypeError):
+        raise ValueError("Revisá las opciones de imagen.") from None
+    if transporte not in ("tcp", "udp") or rotacion not in (0, 90, 180, 270) or ancho not in (0, 640, 1280, 1920) or not 5 <= espera <= 60:
+        raise ValueError("Revisá transporte, rotación, tamaño y tiempo de espera.")
+    return dict(transporte=transporte, rotacion=rotacion, ancho=ancho, espera=espera)
+
+
 def perfil_camara(datos):
     tipo = datos.get("tipo")
     if tipo == "rtsp":
@@ -88,8 +101,8 @@ def perfil_camara(datos):
             raise ValueError("Revisá la IP y el puerto de la URL RTSP.") from None
         if partes.scheme != "rtsp" or puerto == 0 or partes.fragment or any(c.isspace() for c in url):
             raise ValueError("Ingresá una URL rtsp:// con la IPv4 y el perfil de la cámara.")
-        return {"tipo": tipo, "rtsp": url}
-    if tipo not in ("tapo", "hikvision"):
+        return {"tipo": tipo, "rtsp": url, **opciones_imagen(datos)}
+    if tipo not in ("tapo", "hikvision", "dahua"):
         raise ValueError("Elegí el tipo de cámara.")
     ip = ipv4_camara(datos.get("ip", "").strip())
     usuario = texto(datos.get("usuario_camara", ""), 128, True)
@@ -102,10 +115,18 @@ def perfil_camara(datos):
     principal = datos.get("perfil") == "principal"
     if tipo == "tapo":
         ruta = "stream1" if principal else "stream2"
+    elif tipo == "hikvision":
+        canal = int(datos.get("canal") or "1")
+        if not 1 <= canal <= 64:
+            raise ValueError("El canal debe estar entre 1 y 64.")
+        ruta = f"Streaming/Channels/{canal}01" if principal else f"Streaming/Channels/{canal}02"
     else:
-        ruta = "Streaming/Channels/101" if principal else "Streaming/Channels/102"
+        canal = int(datos.get("canal") or "1")
+        if not 1 <= canal <= 64:
+            raise ValueError("El canal debe estar entre 1 y 64.")
+        ruta = f"cam/realmonitor?channel={canal}&subtype={0 if principal else 1}"
     url = f"rtsp://{quote(usuario, safe='')}:{quote(clave, safe='')}@{ip}:{puerto}/{ruta}"
-    return {"tipo": "tapo" if tipo == "tapo" else "rtsp", "rtsp": url}
+    return {"tipo": "tapo" if tipo == "tapo" else "rtsp", "rtsp": url, **opciones_imagen(datos)}
 
 
 def consultar_puestos(conexion, vivero, camara=None):
@@ -133,6 +154,10 @@ def opciones_puestos(conexion, vivero, nodos):
     puestos = consultar_puestos(conexion, vivero)
     ocupados = {p["id"] for p in puestos}
     nuevos = [{"id": codigo, "nombre": codigo} for codigo, _ in PUESTOS if codigo not in ocupados]
+    siguiente = 1
+    while f"CAM{siguiente:03d}" in ocupados:
+        siguiente += 1
+    nuevos.append({"id": f"CAM{siguiente:03d}", "nombre": "Nueva cámara"})
     opciones = {}
     for n in nodos:
         disponibles = [p for p in puestos if puesto_disponible(p, n["id"])]
@@ -143,10 +168,11 @@ def opciones_puestos(conexion, vivero, nodos):
 
 
 @rutas.get("/viveros/{vivero}/alta-camara")
-def pagina_alta(peticion: Request, vivero: str, solicitud: str = "", nodo: str = ""):
+def pagina_alta(peticion: Request, vivero: str, solicitud: str = "", nodo: str = "", camara: str = ""):
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, vivero, editar=True)
         registro = sitio(conexion, vivero)
+        reconfigurar = leer_puesto(conexion, vivero, camara) if camara else None
         nodos = conexion.execute(
             """SELECT id, nombre, alta_en, token_sha IS NOT NULL AS enlazado
             FROM nodos WHERE vivero_id = %s AND (%s = '' OR id = %s) ORDER BY id""", (vivero, nodo, nodo),
@@ -162,13 +188,13 @@ def pagina_alta(peticion: Request, vivero: str, solicitud: str = "", nodo: str =
             """SELECT id FROM altas_camara WHERE vivero_id = %s AND (%s = '' OR nodo_id = %s)
             AND (id = %s OR (solicitante = %s AND
                 ((estado IN ('pendiente', 'en_curso') AND vence_en > now())
-                 OR (tipo = 'agregar' AND terminada_en > now() - interval '2 minutes'))))
+                 OR (tipo IN ('agregar', 'reconfigurar') AND terminada_en > now() - interval '2 minutes'))))
             ORDER BY (id = %s) DESC, creada_en DESC LIMIT 1""",
             (vivero, nodo, nodo, solicitud, usuario["id"], solicitud),
         ).fetchone()
     return pagina(peticion, "alta_camara.html", usuario, sitio=registro, nodos=nodos, puestos=puestos,
                   solicitud=reciente["id"] if reciente else "", nodo_fijado=nodos[0] if nodo else None,
-                  titulo="Agregar cámara")
+                  reconfigurar=reconfigurar, titulo="Cambiar conexión" if reconfigurar else "Agregar cámara")
 
 
 def datos_puesto(conexion, vivero, nodo, camara, nombre):
@@ -178,10 +204,7 @@ def datos_puesto(conexion, vivero, nodo, camara, nombre):
         if not puesto_disponible(puesto, nodo):
             raise HTTPException(409, "Ese puesto ya está ocupado. Elegí otro.")
         return nombre or puesto["nombre"], puesto["hilera"]
-    hilera = HILERAS.get(camara)
-    if hilera is None:
-        raise HTTPException(409, "El puesto dejó de estar disponible. Actualizá la página.")
-    return nombre or camara, hilera
+    return nombre or camara, HILERAS.get(camara, "")
 
 
 @rutas.post("/api/viveros/{vivero}/altas", status_code=202)
@@ -189,12 +212,12 @@ def solicitar(peticion: Request, vivero: str, datos: FormData = Depends(datos_fo
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, vivero, editar=True, formulario=datos)
         tipo = datos.get("accion")
-        if tipo not in ("buscar", "agregar", "capturar"):
+        if tipo not in ("buscar", "agregar", "capturar", "reconfigurar"):
             raise ValueError("Elegí buscar, agregar o tomar una foto.")
         nodo = identificador(datos.get("nodo", ""))
         camara = identificador(datos.get("camara", "")) if tipo != "buscar" else None
-        perfil = perfil_camara(datos) if tipo == "agregar" else None
-        nombre = texto(datos.get("nombre", ""), 80) if tipo == "agregar" else ""
+        perfil = perfil_camara(datos) if tipo in ("agregar", "reconfigurar") else None
+        nombre = texto(datos.get("nombre", ""), 80) if tipo in ("agregar", "reconfigurar") else ""
         alta = secrets.token_hex(16)
         guardado = False
         vencer(conexion)
@@ -205,6 +228,10 @@ def solicitar(peticion: Request, vivero: str, datos: FormData = Depends(datos_fo
                     FROM nodos WHERE vivero_id = %s AND id = %s""", (vivero, nodo), "Zero desconocida.")
                 if not alta_disponible(equipo, datetime.now(UTC)):
                     raise HTTPException(409, "La Zero necesita estar conectada. Revisá su ficha en Equipos Zero.")
+                if tipo == "reconfigurar" and "reconfigurar" not in equipo["reporte"].get("capacidades", []):
+                    raise HTTPException(409, "Actualizá esta Zero a la versión 1.0 antes de cambiar la conexión de la cámara.")
+                if tipo in ("agregar", "reconfigurar") and any(datos.get(k) not in (None, "", "tcp", "0", "30") for k in ("transporte", "rotacion", "ancho", "espera")) and "reconfigurar" not in equipo["reporte"].get("capacidades", []):
+                    raise HTTPException(409, "Actualizá la Zero a 1.0 para aplicar estas opciones de imagen.")
                 if tipo == "capturar" and not captura_disponible(equipo, datetime.now(UTC)):
                     raise HTTPException(409, "Actualizá la Zero desde Configurar Zero para tomar fotos desde Central.")
                 abierta = conexion.execute(
@@ -216,8 +243,13 @@ def solicitar(peticion: Request, vivero: str, datos: FormData = Depends(datos_fo
                         return {"id": abierta["id"]}
                     raise HTTPException(409, "Ya hay una solicitud en curso para esta Zero o puesto.")
                 hilera = ""
-                if tipo == "agregar":
-                    nombre, hilera = datos_puesto(conexion, vivero, nodo, camara, nombre)
+                if tipo in ("agregar", "reconfigurar"):
+                    if tipo == "reconfigurar":
+                        existente = leer_puesto(conexion, vivero, camara)
+                        nombre, hilera = existente["nombre"], existente["hilera"]
+                    else:
+                        nombre, hilera = datos_puesto(conexion, vivero, nodo, camara, nombre)
+                        hilera = texto(datos.get("hilera", hilera), 25)
                     guardar_archivo(archivo_perfil(alta), json.dumps(perfil).encode("utf-8"))
                     guardado = True
                 elif tipo == "capturar":
@@ -246,7 +278,7 @@ def leer_alta(peticion: Request, vivero: str, alta: str):
         if estado in ABIERTA and registro["vence_en"] <= datetime.now(UTC):
             estado, resultado = "error", {"mensaje": VENCIDA}
         respuesta = {"tipo": registro["tipo"], "estado": estado, "nodo": registro["nodo_id"], **resultado}
-        if estado == "ok" and registro["tipo"] in ("agregar", "capturar"):
+        if estado == "ok" and registro["tipo"] in ("agregar", "capturar", "reconfigurar"):
             camara = registro["camara_id"]
             foto = conexion.execute(
                 "SELECT id FROM capturas WHERE vivero_id = %s AND camara_id = %s AND capturada_en = %s",
@@ -279,7 +311,7 @@ def tomar(peticion: Request, vivero: str, nodo: str):
                 """SELECT id, tipo, camara_id, nombre FROM altas_camara WHERE vivero_id = %s AND nodo_id = %s
                 AND estado IN ('pendiente', 'en_curso') AND vence_en > now() FOR UPDATE""", (vivero, nodo),
             ).fetchone()
-            if alta and alta["tipo"] == "agregar":
+            if alta and alta["tipo"] in ("agregar", "reconfigurar"):
                 try:
                     alta["perfil"] = json.loads(archivo_perfil(alta["id"]).read_text(encoding="utf-8"))
                 except (OSError, ValueError):
@@ -293,6 +325,13 @@ def tomar(peticion: Request, vivero: str, nodo: str):
 
 def registrar_camara(conexion, alta, vivero, nodo):
     camara = alta["camara_id"]
+    if alta["tipo"] == "reconfigurar":
+        registrada = conexion.execute("""UPDATE camaras SET nodo_id = %s, actualizada_en = now()
+            WHERE vivero_id = %s AND id = %s RETURNING id""", (nodo, vivero, camara)).fetchone()
+        if registrada:
+            registrar_origenes(conexion, vivero)
+            auditar(conexion, {"id": alta["solicitante"]}, vivero, "reconfigurar cámara probada", camara)
+        return registrada is not None
     conexion.execute("SELECT 1 FROM camaras WHERE vivero_id = %s AND id = %s FOR UPDATE", (vivero, camara))
     existentes = consultar_puestos(conexion, vivero, camara)
     if existentes:
@@ -386,3 +425,4 @@ def confirmar(config, peticion, vivero, nodo, alta_id, datos):
 async def resultado(peticion: Request, vivero: str, nodo: str, alta: str):
     datos = await json_limitado(peticion, limite=24 * 1024)
     return await run_in_threadpool(confirmar, cargar_configuracion(), peticion, vivero, nodo, alta, datos)
+

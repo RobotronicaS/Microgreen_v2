@@ -1,3 +1,5 @@
+> Para la interfaz ilustrada y las opciones de la versión 1.0, empezá por [Instalación y uso de Central 1.0](version_1.md). Los pasos siguientes conservan la documentación de las versiones anteriores.
+
 # Instalación de Microgreen2 desde cero
 
 Seguí esta guía si te asignaron instalar Central y la Zero. Si Central ya está instalado y querés entrar con una dirección fija, empezá por [configurar el acceso privado](#3-configurá-el-acceso-privado-a-central). Si ya tenés el enlace del panel y una Zero vinculada, empezá por la [práctica](../README.md).
@@ -164,3 +166,4 @@ Si necesitás comprobar el panel local desde Windows durante la configuración d
 $central = Read-Host 'Usuario@IP de Central'
 ssh.exe -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8766:127.0.0.1:8766 $central
 ~~~
+

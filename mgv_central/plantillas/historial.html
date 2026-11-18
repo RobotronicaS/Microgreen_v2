@@ -6,14 +6,14 @@
 </div>
 {% set ruta = '/viveros/' ~ sitio.id ~ '/camaras/' ~ camara.id %}
 {% if usuario.rol == 'tecnico' %}
-<section class="panel captura-manual" data-captura-manual data-vivero="{{ sitio.id }}" data-solicitud="{{ solicitud_captura }}">
+<section id="captura" class="panel captura-manual" data-captura-manual data-vivero="{{ sitio.id }}" data-solicitud="{{ solicitud_captura }}">
   <form class="acciones" method="post" action="/api/viveros/{{ sitio.id }}/altas">
     <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
     <input type="hidden" name="accion" value="capturar">
     <input type="hidden" name="camara" value="{{ camara.id }}">
     <input type="hidden" name="nodo" value="{{ camara.nodo_id }}">
     <button class="boton primario" type="submit"{% if not puede_capturar %} disabled{% endif %}>Tomar foto ahora</button>
-    <a class="boton" href="/equipos-zero?vivero={{ sitio.id }}">Ver Zero</a>
+    <a class="boton" href="/viveros/{{ sitio.id }}?zero={{ camara.nodo_id }}">Ver Zero en el esquema</a><a class="boton" href="/viveros/{{ sitio.id }}/camaras/{{ camara.id }}/configurar">Configurar cámara</a>
   </form>
   {% if not puede_capturar %}<p class="muted">La captura manual requiere una Zero conectada con el agente v0.7. Un administrador puede instalarlo desde Configurar Zero.</p>{% endif %}
   <p role="status" aria-live="polite" data-captura-mensaje></p>
@@ -81,3 +81,4 @@
 </div>
 {% else %}<p class="panel muted">Sin capturas para este filtro.</p>{% endif %}
 {% endblock %}
+

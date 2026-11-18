@@ -4,7 +4,7 @@ import re
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,31}")
-INTERVALOS = (15, 30, 60, 120, 240)
+INTERVALOS = (1, 2, 5, 10, 15, 30, 60, 120, 240)
 PUESTOS = tuple((f"H{h}-C{p:02d}", str(h)) for h in range(1, 4) for p in range(1, 6))
 SERIES = {"temp_c": "Temperatura °C", "humedad_pct": "Humedad %", "lux": "Iluminación lx", "co2_ppm": "CO₂ ppm"}
 
@@ -125,3 +125,4 @@ def guardar_sensores(conexion, vivero, origen, filas):
             registros,
         )
     return len(registros)
+

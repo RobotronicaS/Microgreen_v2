@@ -27,6 +27,7 @@ from .registro import rutas as registro
 from .resumen import captura_disponible, resumen_camaras, viveros_visibles
 from .supervisor import estado_supervisor
 from .vinculacion import rutas as vinculacion
+from .visual import preparar_plano, rutas as visual
 from .web import datos_formulario, fila, foto_ruta, local_hoy, pagina, puesto, sitio, volver
 
 app = FastAPI(title="MicroGreenVision Central", docs_url=None, redoc_url=None, openapi_url=None)
@@ -38,6 +39,7 @@ app.include_router(cultivos)
 app.include_router(vinculacion)
 app.include_router(mantenimiento)
 app.include_router(registro)
+app.include_router(visual)
 POR_PAGINA = 48
 
 
@@ -166,7 +168,8 @@ def inicio(peticion: Request, atrasadas: bool = False):
 
 
 @app.get("/viveros/{vivero_id}", name="vivero")
-def vivero(peticion: Request, vivero_id: str):
+def vivero(peticion: Request, vivero_id: str, camara: str = "", zero: str = ""):
+    vista_camara, vista_zero = camara, zero
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, vivero_id)
         vivero_actual = resumen_camaras(conexion, [sitio(conexion, vivero_id)])[0]
@@ -177,11 +180,12 @@ def vivero(peticion: Request, vivero_id: str):
             """SELECT DISTINCT ON (origen) * FROM sensores WHERE vivero_id = %s ORDER BY origen, fecha DESC""",
             (vivero_id,),
         ).fetchall()
+    plano = preparar_plano(vivero_actual)
     hileras = {}
     for ficha in vivero_actual["camaras"]:
         hileras.setdefault(ficha["hilera"], []).append(ficha)
     return pagina(peticion, "vivero.html", usuario, sitio=vivero_actual, hileras=hileras, lotes=lotes,
-                  sensores=sensores, titulo=vivero_actual["nombre"])
+                  sensores=sensores, plano=plano, vista_camara=vista_camara, vista_zero=vista_zero, titulo=vivero_actual["nombre"])
 
 
 @app.get("/viveros/{vivero_id}/camaras/{camara_id}", name="historial")
@@ -434,3 +438,4 @@ def diagnostico(peticion: Request):
         disco = shutil.disk_usage(config.archivo) if usuario["administrador"] else None
     return pagina(peticion, "diagnostico.html", usuario, sitios=viveros, importador=importador,
                   rechazos=rechazos, disco=disco, titulo="Diagnóstico")
+

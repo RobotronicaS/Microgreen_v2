@@ -1,76 +1,75 @@
-# Microgreen2
+# MicroGreenVision Central 1.0.0
 
-Microgreen2 usa **MicroGreenVision Central v0.8.0** y una Raspberry Pi Zero para tomar fotos de un invernáculo. En esta práctica vas a agregar **una cámara**, tomar su primera foto y verla en el historial.
+Sistema instalable para administrar invernáculos, equipos Raspberry Pi Zero y cámaras IP desde una PC. Los dibujos de los invernáculos abren su esquema interior; cada Zero y cámara se puede seleccionar para consultar su estado y abrir su configuración.
 
-| Equipo | Qué hace |
-| --- | --- |
-| Central | Muestra el panel, recibe las fotos y guarda el historial. |
-| Raspberry Pi Zero | Busca la cámara en su red local, toma el JPG y lo envía a Central. |
-| Tu computadora o celular | Abre el enlace HTTPS de Central con Tailscale conectado. |
+## Instalación o actualización
 
-## Antes de empezar
+El servidor Central se instala en la Raspberry Pi 4/5 con Raspberry Pi OS / Debian de 64 bits. La PC Windows abre el panel en su navegador. Las Zero 2 W capturan las fotografías en cada instalación.
 
-GitHub guarda el código y esta guía. Para trabajar con la cámara, abrí el panel de Central.
+Si ya usás la versión 0.8.0, ejecutá el instalador con el mismo usuario Linux. Conserva `config.json`, cuentas, fotografías, historial y equipos. Guarda una copia del código, las unidades y la base de datos en `~/MicroGreenVision_Central/.versiones/` antes de actualizar.
 
-Para visualizar las cámaras, podés pulsar **Registrarse** en la pantalla de ingreso. Elegí tu usuario y contraseña y esperá que el administrador autorice los invernáculos que podés consultar. El encabezado muestra la **versión activa** de Central. Seguí la [guía de registro y consulta](docs/registro.md).
+Desde una carpeta de fuentes o desde el ZIP descomprimido:
 
-Tené a mano el enlace del panel, tu usuario y contraseña, y el nombre del invernáculo y puesto que te asignó el docente. Usá la cámara de la práctica y conectala a la misma red local que la Zero. Para el alta vas a necesitar la cuenta local de la cámara o su URL RTSP.
+```bash
+bash instalar_central.sh
+```
 
-Si te toca instalar los equipos, seguí la [instalación desde cero](docs/instalacion.md). La [guía del docente](docs/docente.md) explica cómo darte acceso al repositorio y preparar tu cuenta.
+No anteponer `sudo`. La instalación solicita sudo para los paquetes y PostgreSQL. La primera instalación muestra una contraseña nueva de administrador; las actualizaciones conservan las cuentas existentes.
 
-Para preparar una Zero desde el panel, abrí **Equipos Zero → Vincular Zero**, completá su dirección, usuario y contraseña y pulsá **Conectar e instalar**. Central comprueba la conexión y habilita **Agregar cámara**. Seguí el [procedimiento de vinculación](docs/instalacion.md#4-vinculá-la-zero-desde-la-página).
+Abrí el enlace HTTPS privado de Central que ya utilizás. El servicio escucha en `127.0.0.1:8766`. [Instalación paso a paso y actualización de las Zero](docs/version_1.md).
 
-## 1. Entrá a tu invernáculo
+## Recorrido principal
 
-1. Conectá Tailscale, abrí el enlace HTTPS que te dio el docente y guardalo en favoritos.
-2. Ingresá con tu cuenta del panel. El permiso **Técnico** habilita el alta en tu invernáculo.
-3. Abrí **Equipos Zero**, buscá el invernáculo y el equipo que te asignaron y pulsá **Agregar cámara** en su ficha.
+1. **Agregar invernáculo:** nombre y ubicación. Se genera un identificador y una Zero inicial por vincular.
+2. **Abrir su dibujo:** aparecen el esquema y todos sus equipos y cámaras.
+3. **Seleccionar la Zero → Conectar e instalar Zero:** ingresar la dirección, usuario Linux y acceso al equipo. También se pueden agregar más Zero desde **Agregar dispositivo**.
+4. **Agregar cámara:** seleccionar su Zero, buscar por ONVIF o completar el acceso RTSP. Se prueba una fotografía antes de registrar la cámara.
+5. **Seleccionar la cámara:** abrir fotos e historial, configurar su programación o cambiar su conexión.
+6. **Organizar plano:** arrastrar cámaras y Zero. Las posiciones se guardan en la base de datos.
 
-## 2. Buscá la cámara
+No hay un límite de 10 invernáculos ni de 15 cámaras en el catálogo. El rendimiento efectivo depende de la Raspberry, las cámaras, la frecuencia elegida, la red y el almacenamiento. Conviene distribuir las cámaras entre varios equipos Zero cuando aumenta la carga.
 
-1. Confirmá que **Zero de captura** muestra tu equipo. Un nombre de ejemplo es **zero01**.
-2. Pulsá **Buscar cámaras**. La Zero consulta por ONVIF en su Wi‑Fi. Esperá a que aparezcan los resultados.
-3. Ubicá tu cámara por nombre o por IP y pulsá **Usar IP**. Si la búsqueda queda vacía, ingresá la IP de tu cámara. Podés encontrarla en su app o en la lista de equipos conectados del router.
+## Cámaras y programación
 
-## 3. Completá los datos
+- Perfiles Tapo, Hikvision, Dahua y URL RTSP de otro fabricante.
+- Cámaras con visión infrarroja cuando entregan un flujo RTSP compatible; también se reciben fotografías en blanco y negro. No es una integración genérica de sensores térmicos ni del control del iluminador IR.
+- Nombre, sector/hilera, pausa y reanudación, horarios y frecuencias de 1, 2, 5, 10, 15, 30, 60, 120 o 240 minutos.
+- Cambio de dirección, acceso, calidad y Zero mediante una fotografía verificada. Se conserva la configuración previa cuando la prueba falla.
+- TCP o UDP; giro de 90°, 180° o 270°; ancho original o máximo de 640/1280/1920 px; espera de 5 a 60 segundos.
+- Las opciones nuevas y frecuencias menores a 15 minutos requieren actualizar la Zero a 1.0 desde su ficha.
 
-| Campo del panel | Qué poner |
-| --- | --- |
-| **Puesto** | El código asignado. El primer puesto suele ser `H1-C01`. Si el docente ya preparó uno que figura **Esperando JPG**, elegí ese. |
-| **Nombre (opcional)** | Una referencia que puedas reconocer, por ejemplo **Entrada de la hilera**. |
-| **Tipo de cámara** | **Tapo**, **Hikvision** u **Otra cámara RTSP**. |
-| **IP de la cámara** | La IPv4 que detectó la Zero o que encontraste en el router. Ejemplo de formato `192.168.1.42`. |
-| **Puerto RTSP** | Dejá `554` si la cámara usa el puerto habitual. Usá el que configuraron en la cámara si es otro. |
-| **Usuario y contraseña de cámara** | Para Tapo, usá la **Cuenta de cámara** creada en su app. Para Hikvision, usá un usuario de ese equipo con permiso para ver el video. |
-| **Calidad de captura** | Empezá con **Estándar**. |
-| **URL RTSP de la cámara** | Aparece al elegir **Otra cámara RTSP**. Pegá la URL del fabricante con la IP de tu cámara. El formato es `rtsp://usuario:clave@IP:554/ruta`. |
+Los códigos de cámara aceptan hasta 32 letras, números, guiones o guiones bajos. Son únicos dentro de cada invernáculo y permanecen estables para conservar el historial.
 
-Para ver cómo se prepara la cuenta o el perfil, consultá las guías de [Tapo](https://www.tp-link.com/es/support/faq/2680/) y [Hikvision](https://supportusa.hikvision.com/support/solutions/articles/17000129022-do-you-have-an-example-showing-the-format-for-getting-a-rtsp-stream-from-a-camera-).
+## Funciones conservadas
 
-## 4. Probá y agregá la cámara
+Captura manual, cola local ante desconexiones, recepción con acuse y verificación, historial por fecha, descarga de originales, ZIP, comparación y timelapse, lotes de cultivo, regiones de análisis y cobertura vegetal, sensores, supervisor, avisos, respaldos y verificación de copias.
 
-1. Pulsá **Probar y agregar** una vez y dejá la página abierta. Central le pide a la Zero que tome un JPG.
-2. Si la prueba funciona, se registra el puesto. El panel puede mostrar **Esperando el primer JPG en Central** mientras se incorpora la foto.
-3. Cuando aparezca la miniatura, abrí **Ver historial**. Verificá que el código del puesto y la fecha correspondan a tu prueba.
+El panel muestra fotografías guardadas y su fecha; no es una transmisión de video en vivo. El análisis de cobertura no equivale a una medición universal de altura.
 
-La práctica queda completa cuando podés mostrar **el invernáculo, el puesto y una foto en el historial**. Anotá la hora de esa captura.
+## Usuarios
 
-## 5. Tomá otra foto desde el panel
+- **Consulta:** ve los invernáculos autorizados y sus fotografías.
+- **Técnico:** administra cámaras, programación y posiciones del plano en sus invernáculos.
+- **Administrador:** administra invernáculos, Zero, personas y mantenimiento.
 
-1. Abrí **Ver historial** en tu cámara.
-2. Pulsá **Tomar foto ahora** y esperá el resultado. La Zero usa el acceso a la cámara que ya tiene guardado.
-3. Cuando Central reciba la foto, la página muestra su miniatura y el enlace al historial. Si se corta la conexión, podés actualizar la página para consultar el mismo pedido.
+Los nuevos registros se aprueban desde **Configuración → Administración**. [Registro de usuarios](docs/registro.md).
 
-El botón requiere permiso **Técnico** y una Zero conectada con el agente v0.7. El docente puede actualizarla desde **Equipos Zero → Configurar Zero**. Los agentes anteriores siguen enviando sus capturas programadas.
+## Documentación
 
-La guía de [operación de Central](docs/operacion.md) explica el inicio, los avisos por correo o Telegram y los respaldos que configura el administrador.
+- [Instalar, actualizar y comenzar con la versión 1.0](docs/version_1.md).
+- [Conexiones y preparación de los equipos](docs/instalacion.md).
+- [Operación, avisos y respaldos](docs/operacion.md).
+- [Guía del docente](docs/docente.md).
+- [Cambios de versión](CHANGELOG.md).
 
-## Si te trabás
+## Comprobación del software
 
-| Lo que ves | Qué hacer |
-| --- | --- |
-| Falta **Agregar cámara** | Confirmá que tu cuenta tenga permiso **Técnico** en ese invernáculo y que tu Zero figure como **Lista para agregar cámaras**. |
-| La Zero dice **sin enlace de alta** | Avisale al docente qué nodo aparece. Puede revisar el agente y el enlace HTTPS desde la Zero. |
-| **Buscar cámaras** no encuentra equipos | Confirmá la IP en el router. Cargala a mano y probá. |
-| La prueba rechaza el acceso | Revisá la cuenta local de la cámara y que RTSP esté habilitado. Volvé a pulsar **Probar y agregar**. |
-| La cámara quedó registrada y la foto todavía no aparece | Abrí **Ver historial** después del ciclo de importación. Si sigue vacío, pasale al docente el puesto y el mensaje de la prueba para revisar **Supervisor**. |
+Las pruebas usan PostgreSQL aislado y una Zero simulada para comprobar permisos, migraciones, captura y reintentos, 150 cámaras, altas fuera de la plantilla, reconfiguración y posiciones persistentes. No contactan cámaras ni envían avisos externos.
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install -r pruebas/requirements.txt
+PYTHONPATH=. .venv/bin/python -m pytest -q pruebas
+```
+
+La prueba de respaldos completos requiere `rsync`; las integraciones necesitan PostgreSQL. No ejecutar las pruebas con la base de producción. Los instaladores de servicios están destinados a Linux con systemd.

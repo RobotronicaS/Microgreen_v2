@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 import json
 import secrets
+import unicodedata
+import re
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from starlette.datastructures import FormData
@@ -61,7 +63,12 @@ def registrar_origenes(conexion, vivero):
 def crear_vivero(peticion: Request, datos: FormData = Depends(datos_formulario)):
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, admin=True, formulario=datos)
-        vivero = identificador(datos.get("id", "")).lower()
+        codigo = datos.get("id", "").strip()
+        if not codigo:
+            base = unicodedata.normalize("NFKD", datos.get("nombre", "")).encode("ascii", "ignore").decode().lower()
+            base = re.sub(r"[^a-z0-9]+", "-", base).strip("-")[:22] or "invernaculo"
+            codigo = base + "-" + secrets.token_hex(3)
+        vivero = identificador(codigo).lower()
         nodo = identificador(datos.get("nodo", "zero01")).lower()
         nombre = texto(datos.get("nombre", ""), 80, True)
         ubicacion = texto(datos.get("ubicacion", ""), 120)
@@ -73,7 +80,7 @@ def crear_vivero(peticion: Request, datos: FormData = Depends(datos_formulario))
             if datos.get("plantilla") == "si":
                 plantilla_puestos(conexion, vivero, nodo)
             auditar(conexion, usuario, vivero, "crear invernáculo")
-    return volver(f"/viveros/{vivero}/ajustes")
+    return volver(f"/viveros/{vivero}" if datos.get("vista") == "plano" else f"/viveros/{vivero}/ajustes")
 
 
 @rutas.get("/viveros/{vivero}/ajustes")
@@ -231,6 +238,12 @@ def guardar_camara(peticion: Request, vivero: str, datos: FormData = Depends(dat
         if intervalo not in INTERVALOS or not 5 <= atraso <= 1440:
             raise ValueError("Revisá la frecuencia y el atraso, expresados en minutos.")
         with conexion.transaction():
+            anterior = conexion.execute("SELECT nodo_id FROM camaras WHERE vivero_id = %s AND id = %s FOR UPDATE", (vivero, camara)).fetchone()
+            if anterior and anterior["nodo_id"] != nodo:
+                raise HTTPException(409, "Para cambiar la Zero, usá Cambiar conexión o calidad y probá la cámara en el equipo nuevo.")
+            equipo = conexion.execute("SELECT reporte FROM nodos WHERE vivero_id = %s AND id = %s", (vivero, nodo)).fetchone()
+            if intervalo < 15 and "intervalos_v1" not in equipo["reporte"].get("capacidades", []):
+                raise HTTPException(409, "Actualizá esta Zero a la versión 1.0 antes de usar frecuencias menores a 15 minutos.")
             conexion.execute(
                 """INSERT INTO camaras (vivero_id, id, nodo_id, nombre, hilera, activa, intervalo, atraso_minutos, desde, hasta)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -246,7 +259,7 @@ def guardar_camara(peticion: Request, vivero: str, datos: FormData = Depends(dat
             )
             registrar_origenes(conexion, vivero)
             auditar(conexion, usuario, vivero, "guardar cámara", camara)
-    return volver(f"/viveros/{vivero}/ajustes")
+    return volver(f"/viveros/{vivero}/camaras/{camara}/configurar" if datos.get("retorno") == "camara" else f"/viveros/{vivero}/ajustes")
 
 
 @rutas.post("/gestion/usuarios")
@@ -321,3 +334,4 @@ def cambiar_clave(peticion: Request, datos: FormData = Depends(datos_formulario)
                              (usuario["id"], usuario["token_sha"]))
             auditar(conexion, usuario, None, "cambiar contraseña")
     return pagina(peticion, "cuenta.html", usuario, cambiada=True, titulo="Mi cuenta")
+
