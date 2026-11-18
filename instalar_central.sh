@@ -83,6 +83,8 @@ install -d -m 700 "$destino/mgv_central"
 cp -a -- "$origen/mgv_central/." "$destino/mgv_central/"
 tar -czf "$destino/zero.tar.gz" -C "$origen" zero
 chmod 600 "$destino/zero.tar.gz"
+tar -czf "$destino/runpod-ia.tar.gz" -C "$origen" runpod_ia
+chmod 600 "$destino/runpod-ia.tar.gz"
 install -m 600 "$origen/README.md" "$destino/README.md"
 install -d -m 700 "$destino/docs"
 install -m 600 "$origen"/docs/*.md "$destino/docs/"
@@ -103,14 +105,14 @@ from urllib.request import urlopen
 for _ in range(20):
     try:
         with urlopen("http://127.0.0.1:8766/salud", timeout=2) as respuesta:
-            if json.load(respuesta) == {"estado": "ok", "version": "1.0.1"}:
-                print("Central v1.0.1 responde en 127.0.0.1:8766.")
+            if json.load(respuesta) == {"estado": "ok", "version": "1.1.0"}:
+                print("Central v1.1.0 responde en 127.0.0.1:8766.")
                 break
     except (OSError, URLError, ValueError):
         pass
     time.sleep(1)
 else:
-    raise SystemExit("Central v1.0.1 no respondió en 8766. Revisá microgreen-central-panel.service.")
+    raise SystemExit("Central v1.1.0 no respondió en 8766. Revisá microgreen-central-panel.service.")
 PY
 trap - EXIT
 printf 'Copia previa en %s\n' "$reserva"

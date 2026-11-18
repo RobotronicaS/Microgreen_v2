@@ -1,0 +1,17 @@
+{% extends 'base.html' %}{% block contenido %}
+<p class="ruta"><a href="/configuracion">Configuración</a> / Análisis con IA</p>
+<h1>Análisis con IA · RunPod</h1>
+<p>Central envía una copia reducida de cada foto seleccionada al analizador. Los originales quedan en Central. Encender el Pod se administra en RunPod.</p>
+{% if mensaje == 'guardado' %}<p role="status">Configuración guardada.</p>{% elif mensaje == 'conectado' %}<p role="status">Conexión y protocolo verificados.</p>{% endif %}
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}
+<section class="panel"><form method="post" action="/runpod" class="form-col">
+<input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+<label>Dirección HTTPS del analizador<input name="url" type="url" value="{{ ajustes.url }}" placeholder="https://ID-8767.proxy.runpod.net" maxlength="200"></label>
+<label>Clave de análisis<input name="token" type="password" autocomplete="new-password" minlength="32" maxlength="256" placeholder="{{ 'Ya configurada; vacía conserva la actual' if con_clave else 'La misma clave configurada en el Pod' }}"></label>
+<label>Tiempo de espera (s)<input name="espera" type="number" min="5" max="60" value="{{ ajustes.espera }}"></label>
+<label><input type="checkbox" name="activo" value="si" {% if ajustes.activo %}checked{% endif %}> Activar conexión con RunPod</label>
+<label><input type="checkbox" name="automatico" value="si" {% if ajustes.automatico %}checked{% endif %}> Analizar automáticamente fotos nuevas de los lotes configurados</label>
+<button class="boton primario">Guardar</button></form>
+<form method="post" action="/runpod/probar"><input type="hidden" name="csrf" value="{{ usuario.csrf }}"><button class="boton">Probar conexión guardada</button></form></section>
+<section class="panel"><h2>Primera prueba</h2><p>Abrí un lote, definí la región de cultivo y elegí «Análisis con IA». Empezá con una foto y revisá la imagen marcada antes de activar el modo automático.</p><p>SAM2 con filtrado de verde entrega una estimación experimental de cobertura. No mide altura, NDVI ni diagnostica enfermedades. Las fotos IR nocturnas requieren otro método.</p><a class="boton" href="/runpod/paquete">Descargar programa del Pod</a></section>
+{% endblock %}

@@ -13,9 +13,10 @@ from PIL import Image, ImageDraw, ImageOps
 
 from .base import conectar
 from .ingesta import guardar_archivo
+from .runpod import ErrorIA, analizar_ia, automatico
 
 ALGORITMO = "rgb-exceso-verde-1"
-ANALISIS = ("analisis", "reanalizar")
+ANALISIS = ("analisis", "reanalizar", "ia")
 EXPORTACIONES = ("timelapse", "zip")
 
 
@@ -136,6 +137,7 @@ def analizar(conexion, config, trabajo):
                   mascara = EXCLUDED.mascara, medida_en = now()""",
             (foto["id"], lote["id"], lote["revision"], ALGORITMO, cobertura, area, clave),
         )
+    automatico(conexion, foto, lotes)
     return f"Calidad evaluada · {len(lotes)} lotes medidos.", None
 
 
@@ -234,7 +236,7 @@ def procesar(config, media=False):
         )
         inicio = monotonic()
         cantidad = 0
-        funciones = {"analisis": analizar, "reanalizar": reanalizar, "timelapse": exportar, "zip": exportar}
+        funciones = {"analisis": analizar, "reanalizar": reanalizar, "ia": analizar_ia, "timelapse": exportar, "zip": exportar}
         while cantidad < (1 if media else 90) and monotonic() - inicio < 30:
             trabajo = siguiente_trabajo(conexion, tipos)
             if not trabajo:
@@ -247,7 +249,7 @@ def procesar(config, media=False):
                 )
             except (TrabajoInvalido, OSError, subprocess.SubprocessError) as error:
                 terminal = isinstance(error, TrabajoInvalido) or trabajo["intentos"] >= 3
-                mensaje = str(error) if isinstance(error, TrabajoInvalido) else "Falló el acceso a un archivo o FFmpeg."
+                mensaje = str(error) if isinstance(error, (TrabajoInvalido, ErrorIA)) else "Falló el acceso a un archivo o FFmpeg."
                 conexion.execute(
                     """UPDATE trabajos SET estado = %s, mensaje = %s, fin_en = now(),
                       disponible_en = now() + interval '1 minute' WHERE id = %s""",

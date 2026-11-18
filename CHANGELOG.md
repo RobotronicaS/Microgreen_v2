@@ -1,5 +1,14 @@
 # Cambios
 
+## 1.1.0 — 18/11/2026
+
+- Conexión opcional a un Pod RunPod mediante HTTPS y clave de análisis.
+- Alta manual de análisis por lote y modo automático opcional para fotos nuevas.
+- Resultados SAM2, PNG y CSV separados de las mediciones RGB; control de región y revisión.
+- Reintentos, caché de solicitudes y validación de imagen, respuesta y permisos.
+- Servicio GPU reproducible, pesos de SAM2 fijados y prueba local sin exponer puertos.
+- La cobertura con filtrado de verde es experimental y requiere validación con el cultivo real.
+
 ## 1.0.1 — 18/11/2026
 
 - El alta y el cambio de conexión admiten cámaras con contraseña vacía; el formulario y el servidor dejan de exigirla.

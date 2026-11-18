@@ -50,7 +50,7 @@ def incidentes(conexion, config):
         hallazgos["central:importador"] = (None, "aviso", "Revisá el temporizador o los errores de recepción de Central.")
     for fila in conexion.execute(
         """SELECT vivero_id, count(*) AS cantidad FROM trabajos WHERE estado = 'error'
-        AND tipo = 'analisis' GROUP BY vivero_id""",
+        AND tipo IN ('analisis','ia') GROUP BY vivero_id""",
     ):
         hallazgos[f"trabajos:{fila['vivero_id']}"] = (
             fila["vivero_id"], "aviso", f"{fila['cantidad']} análisis requieren revisión.",

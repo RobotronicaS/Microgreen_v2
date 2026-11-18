@@ -68,7 +68,7 @@ def crear_respaldo(config, destino=None):
         shutil.copyfile(ruta_configuracion(), temporal / "config.json")
         (temporal / "config.json").chmod(0o600)
         configuraciones = {}
-        for nombre in ("avisos.json", "respaldo.json"):
+        for nombre in ("avisos.json", "respaldo.json", "runpod.json"):
             origen = ruta_configuracion().with_name(nombre)
             if origen.is_file():
                 copia = temporal / nombre
@@ -131,7 +131,7 @@ def verificar_respaldo(ruta):
             if file_digest(entrada, "sha256").hexdigest() != datos[campo]:
                 raise ValueError("El respaldo tiene un archivo de control modificado.")
     for nombre, sha in datos.get("configuraciones_sha256", {}).items():
-        if nombre not in ("avisos.json", "respaldo.json"):
+        if nombre not in ("avisos.json", "respaldo.json", "runpod.json"):
             raise ValueError("La lista de configuraciones del respaldo es inválida.")
         with (ruta / nombre).open("rb") as entrada:
             if file_digest(entrada, "sha256").hexdigest() != sha:

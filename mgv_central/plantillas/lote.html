@@ -5,6 +5,7 @@
   <div class="acciones solo-pantalla">
     <a class="boton" href="/viveros/{{ sitio.id }}/camaras/{{ lote.camara_id }}?lote={{ lote.id }}">Ver fotos</a>
     <a class="boton" href="/lotes/{{ lote.id }}/mediciones.csv">CSV</a>
+    <a class="boton" href="/lotes/{{ lote.id }}/runpod">Análisis con IA</a>
     <button type="button" class="boton" data-imprimir>Imprimir informe</button>
     {% if usuario.rol == 'tecnico' %}<a class="boton primario" href="/lotes/{{ lote.id }}/editar">Editar lote</a>{% endif %}
   </div>

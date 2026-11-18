@@ -124,7 +124,7 @@ def colas_central(conexion, ids, ahora, incidencias):
     if not ids:
         return []
     registros = conexion.execute(
-        """SELECT CASE WHEN tipo IN ('analisis', 'reanalizar') THEN 'analisis' ELSE 'media' END AS grupo,
+        """SELECT CASE WHEN tipo IN ('analisis', 'reanalizar', 'ia') THEN 'analisis' ELSE 'media' END AS grupo,
                count(*) FILTER (WHERE estado = 'pendiente') AS pendientes,
                count(*) FILTER (WHERE estado = 'en_proceso') AS en_curso,
                count(*) FILTER (WHERE estado = 'error') AS errores,

@@ -1,4 +1,4 @@
-# MicroGreenVision Central 1.0.1
+# MicroGreenVision Central 1.1.0
 
 Sistema instalable para administrar invernáculos, equipos Raspberry Pi Zero y cámaras IP desde una PC. Los dibujos de los invernáculos abren su esquema interior; cada Zero y cámara se puede seleccionar para consultar su estado y abrir su configuración.
 
@@ -73,3 +73,7 @@ PYTHONPATH=. .venv/bin/python -m pytest -q pruebas
 ```
 
 La prueba de respaldos completos requiere `rsync`; las integraciones necesitan PostgreSQL. No ejecutar las pruebas con la base de producción. Los instaladores de servicios están destinados a Linux con systemd.
+
+## Análisis con RunPod
+
+Central 1.1 permite conectar un Pod GPU con SAM2, solicitar una foto por lote o activar el envío de fotos nuevas. Guarda resultados, vistas marcadas e historial de cada región, separados de las mediciones RGB anteriores. [Configuración y límites del análisis](docs/runpod.md).

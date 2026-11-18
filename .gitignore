@@ -49,3 +49,7 @@ venv/
 .idea/
 Thumbs.db
 .DS_Store
+
+runpod.json
+**/token.txt
+**/cache_ia/

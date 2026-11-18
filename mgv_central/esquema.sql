@@ -319,3 +319,20 @@ ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_tipo_check;
 ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_tipo_check CHECK (tipo IN ('buscar', 'agregar', 'capturar', 'reconfigurar'));
 ALTER TABLE altas_camara DROP CONSTRAINT IF EXISTS altas_camara_check;
 ALTER TABLE altas_camara ADD CONSTRAINT altas_camara_check CHECK ((tipo IN ('agregar', 'capturar', 'reconfigurar')) = (camara_id IS NOT NULL));
+
+-- Central 1.1: análisis remoto separado de las mediciones RGB existentes.
+ALTER TABLE trabajos DROP CONSTRAINT IF EXISTS trabajos_tipo_check;
+ALTER TABLE trabajos ADD CONSTRAINT trabajos_tipo_check
+  CHECK (tipo IN ('analisis','reanalizar','timelapse','zip','ia'));
+CREATE TABLE IF NOT EXISTS resultados_ia (
+  captura_id bigint NOT NULL REFERENCES capturas(id),
+  lote_id bigint NOT NULL REFERENCES lotes(id),
+  revision integer NOT NULL,
+  algoritmo text NOT NULL,
+  cobertura real NOT NULL CHECK(cobertura BETWEEN 0 AND 100),
+  mascara text NOT NULL,
+  solicitud text NOT NULL,
+  validacion text NOT NULL DEFAULT 'estimacion' CHECK (validacion IN ('estimacion','insuficiente')),
+  medida_en timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY(captura_id,lote_id,revision)
+);

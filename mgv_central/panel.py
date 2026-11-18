@@ -24,6 +24,7 @@ from .gestion import rutas as gestion
 from .mantenimiento import rutas as mantenimiento
 from .receptor import api
 from .registro import rutas as registro
+from .runpod import rutas as runpod
 from .resumen import captura_disponible, resumen_camaras, viveros_visibles
 from .supervisor import estado_supervisor
 from .vinculacion import rutas as vinculacion
@@ -40,6 +41,7 @@ app.include_router(vinculacion)
 app.include_router(mantenimiento)
 app.include_router(registro)
 app.include_router(visual)
+app.include_router(runpod)
 POR_PAGINA = 48
 
 
