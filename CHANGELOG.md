@@ -1,5 +1,11 @@
 # Cambios
 
+## 1.0.1 — 18/11/2026
+
+- El alta y el cambio de conexión admiten cámaras con contraseña vacía; el formulario y el servidor dejan de exigirla.
+- Ayuda para conexiones RTSP sin contraseña y sin autenticación. La búsqueda ONVIF no identifica por sí sola el perfil de video.
+- La Zero existente puede recibir estas conexiones sin reinstalar su agente.
+
 ## 1.0.0 — 18/11/2026
 
 - Interfaz ilustrada para PC: dibujos de invernáculos, esquema interior y fichas seleccionables de cámaras y Zero.

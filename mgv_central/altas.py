@@ -107,8 +107,8 @@ def perfil_camara(datos):
     ip = ipv4_camara(datos.get("ip", "").strip())
     usuario = texto(datos.get("usuario_camara", ""), 128, True)
     clave = datos.get("clave_camara", "")
-    if not isinstance(clave, str) or not 1 <= len(clave) <= 256 or "\x00" in clave:
-        raise ValueError("Ingresá la contraseña de la cámara.")
+    if not isinstance(clave, str) or len(clave) > 256 or "\x00" in clave:
+        raise ValueError("La contraseña debe tener hasta 256 caracteres y no contener caracteres nulos.")
     puerto = int(datos.get("puerto") or "554")
     if not 1 <= puerto <= 65535:
         raise ValueError("Ingresá un puerto RTSP entre 1 y 65535.")

@@ -1,4 +1,4 @@
-# Instalación y uso de Central 1.0.0
+# Instalación y uso de Central 1.0.1
 
 ## 1. Dónde se instala
 
@@ -25,7 +25,7 @@ curl http://127.0.0.1:8766/salud
 systemctl --user status microgreen-central-panel.service --no-pager
 ```
 
-La respuesta de salud debe incluir `"estado":"ok"` y `"version":"1.0.0"`. Abrí el mismo enlace HTTPS de antes y recargá la página. La nueva versión debe aparecer en el encabezado. Una instalación nueva muestra su primera clave de administrador en la terminal; la actualización conserva la cuenta existente.
+La respuesta de salud debe incluir `"estado":"ok"` y `"version":"1.0.1"`. Abrí el mismo enlace HTTPS de antes y recargá la página. La nueva versión debe aparecer en el encabezado. Una instalación nueva muestra su primera clave de administrador en la terminal; la actualización conserva la cuenta existente.
 
 Si se interrumpe, el instalador intenta reponer el código previo y deja su reserva. No borres `.versiones`: conserva el volcado previo de PostgreSQL. La restauración completa de esa base se hace con los servicios detenidos y revisando primero la copia correspondiente; no alcanza con reemplazar archivos Python para revertir cambios de datos posteriores.
 

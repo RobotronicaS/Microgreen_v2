@@ -1,4 +1,4 @@
-# MicroGreenVision Central 1.0.0
+# MicroGreenVision Central 1.0.1
 
 Sistema instalable para administrar invernáculos, equipos Raspberry Pi Zero y cámaras IP desde una PC. Los dibujos de los invernáculos abren su esquema interior; cada Zero y cámara se puede seleccionar para consultar su estado y abrir su configuración.
 
