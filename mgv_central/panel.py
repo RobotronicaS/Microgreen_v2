@@ -29,6 +29,7 @@ from .resumen import captura_disponible, resumen_camaras, viveros_visibles
 from .supervisor import estado_supervisor
 from .vinculacion import rutas as vinculacion
 from .visual import preparar_plano, rutas as visual
+from .invernaculos import cargar_canteros, rutas as invernaculos
 from .web import datos_formulario, fila, foto_ruta, local_hoy, pagina, puesto, sitio, volver
 
 app = FastAPI(title="MicroGreenVision Central", docs_url=None, redoc_url=None, openapi_url=None)
@@ -42,6 +43,7 @@ app.include_router(mantenimiento)
 app.include_router(registro)
 app.include_router(visual)
 app.include_router(runpod)
+app.include_router(invernaculos)
 POR_PAGINA = 48
 
 
@@ -175,6 +177,7 @@ def vivero(peticion: Request, vivero_id: str, camara: str = "", zero: str = ""):
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, vivero_id)
         vivero_actual = resumen_camaras(conexion, [sitio(conexion, vivero_id)])[0]
+        cargar_canteros(conexion, vivero_actual)
         lotes = conexion.execute(
             "SELECT * FROM lotes WHERE vivero_id = %s ORDER BY siembra DESC, id DESC LIMIT 12", (vivero_id,),
         ).fetchall()

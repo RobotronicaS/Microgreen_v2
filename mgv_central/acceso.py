@@ -96,7 +96,7 @@ def exigir(conexion, peticion, vivero=None, editar=False, admin=False, formulari
     if admin and not usuario["administrador"]:
         raise HTTPException(403, "Esta operación requiere una cuenta administradora.")
     if vivero is not None:
-        if not conexion.execute("SELECT 1 FROM viveros WHERE id = %s", (vivero,)).fetchone():
+        if not conexion.execute("SELECT 1 FROM viveros WHERE id = %s AND eliminado_en IS NULL", (vivero,)).fetchone():
             raise HTTPException(404, "Invernáculo desconocido.")
         permiso = conexion.execute(
             "SELECT rol FROM permisos WHERE usuario_id = %s AND vivero_id = %s", (usuario["id"], vivero),

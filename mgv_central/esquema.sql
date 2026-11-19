@@ -52,6 +52,21 @@ CREATE TABLE IF NOT EXISTS estado_importador (
 ALTER TABLE viveros ADD COLUMN IF NOT EXISTS zona text NOT NULL DEFAULT 'America/Montevideo';
 ALTER TABLE viveros ADD COLUMN IF NOT EXISTS ubicacion text NOT NULL DEFAULT '';
 ALTER TABLE viveros ADD COLUMN IF NOT EXISTS creado_en timestamptz NOT NULL DEFAULT now();
+ALTER TABLE viveros ADD COLUMN IF NOT EXISTS eliminado_en timestamptz;
+ALTER TABLE viveros ADD COLUMN IF NOT EXISTS canteros_filas integer NOT NULL DEFAULT 3 CHECK (canteros_filas BETWEEN 1 AND 20);
+ALTER TABLE viveros ADD COLUMN IF NOT EXISTS canteros_columnas integer NOT NULL DEFAULT 1 CHECK (canteros_columnas BETWEEN 1 AND 20);
+
+CREATE TABLE IF NOT EXISTS canteros (
+    vivero_id text NOT NULL REFERENCES viveros(id),
+    fila integer NOT NULL CHECK (fila BETWEEN 1 AND 20),
+    columna integer NOT NULL CHECK (columna BETWEEN 1 AND 20),
+    nombre text NOT NULL DEFAULT '' CHECK (length(nombre) <= 80),
+    planta text NOT NULL DEFAULT '' CHECK (length(planta) <= 120),
+    variedad text NOT NULL DEFAULT '' CHECK (length(variedad) <= 120),
+    descripcion text NOT NULL DEFAULT '' CHECK (length(descripcion) <= 1000),
+    actualizada_en timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (vivero_id, fila, columna)
+);
 
 CREATE TABLE IF NOT EXISTS nodos (
     vivero_id text NOT NULL REFERENCES viveros(id),

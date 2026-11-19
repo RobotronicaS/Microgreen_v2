@@ -10,10 +10,10 @@ ATRASO_IMPORTADOR = timedelta(minutes=5)
 
 def viveros_visibles(conexion, usuario):
     if usuario["administrador"]:
-        return conexion.execute("SELECT * FROM viveros ORDER BY nombre, id").fetchall()
+        return conexion.execute("SELECT * FROM viveros WHERE eliminado_en IS NULL ORDER BY nombre, id").fetchall()
     return conexion.execute(
         """SELECT v.* FROM viveros v JOIN permisos p ON p.vivero_id = v.id
-        WHERE p.usuario_id = %s ORDER BY v.nombre, v.id""", (usuario["id"],),
+        WHERE p.usuario_id = %s AND v.eliminado_en IS NULL ORDER BY v.nombre, v.id""", (usuario["id"],),
     ).fetchall()
 
 

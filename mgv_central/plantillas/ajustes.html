@@ -5,7 +5,7 @@
 <h1>Ajustes de {{ sitio.nombre }}</h1>
 <div class="dos-columnas">
 <section class="panel">
-  <h2>Invernáculo</h2>
+  <h2>Invernáculo</h2><p><a class="btn" href="/viveros/{{ sitio.id }}/canteros">Editar canteros y variedades</a></p>
   <form method="post" class="form-col">
     <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
     <label>Nombre <input name="nombre" value="{{ sitio.nombre }}" maxlength="80" required></label>
@@ -43,5 +43,6 @@
   </details>
   {% endfor %}
 </section>
+{% if usuario.administrador %}<section class="panel danger-zone"><h2>Eliminar invernáculo</h2><p>Quitar este invernáculo del panel y deshabilitar sus equipos conservando fotos e historial.</p><a class="btn danger-outline" href="/viveros/{{ sitio.id }}/eliminar">Eliminar invernáculo</a></section>{% endif %}
 {% endblock %}
 

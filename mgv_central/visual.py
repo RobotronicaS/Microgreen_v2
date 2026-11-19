@@ -19,7 +19,7 @@ rutas = APIRouter()
 def preparar_plano(registro):
     """Coordenadas lógicas; la representación no es una medición física."""
     camaras, nodos = registro['camaras'], registro['nodos']
-    filas = max(3, (len(camaras) + 1) // 2)
+    filas = max(registro.get('canteros_filas', 3), (len(camaras) + 1) // 2)
     alto = max(540, 150 + filas * 105, 220 + len(nodos) * 115)
     ahora = datetime.now(UTC)
     for i, nodo in enumerate(nodos):
@@ -32,7 +32,7 @@ def preparar_plano(registro):
         camara['px'] = camara.get('plano_x') * 920 if camara.get('plano_x') is not None else 240 + (i % 2) * 285
         camara['py'] = camara.get('plano_y') * alto if camara.get('plano_y') is not None else 185 + (i // 2) * 105
         camara['equipo'] = por_id.get(camara['nodo_id'])
-    return dict(alto=alto, filas=filas)
+    return dict(alto=alto, filas=registro.get('canteros_filas', 3))
 
 
 @rutas.get('/configuracion')

@@ -21,20 +21,20 @@ from .ingesta import JPG, crear_bandeja, sincronizar, verificar_huella
 api = APIRouter(prefix="/api/nodos")
 
 
-def autenticar(conexion, peticion, vivero, nodo):
+def autenticar(conexion, peticion, vivero, nodo, permitir_eliminado=False):
     if not ID.fullmatch(vivero) or not ID.fullmatch(nodo):
         raise HTTPException(404, "Nodo desconocido.")
     auth = peticion.headers.get("authorization", "")
     if not auth.startswith("Bearer ") or len(auth) != 50 or not auth.isascii():
         raise HTTPException(401, "Credencial de nodo requerida.")
     fila = conexion.execute(
-        """SELECT n.token_sha, v.zona,
+        """SELECT n.token_sha, v.zona, v.eliminado_en,
         (SELECT z.token_sha FROM vinculaciones_zero z
          WHERE z.vivero_id = n.vivero_id AND z.nodo_id = n.id AND z.estado = 'en_curso'
          AND z.actualizada_en > now() - interval '2 minutes' AND z.creada_en > now() - interval '20 minutes') AS token_instalacion
         FROM nodos n JOIN viveros v ON v.id = n.vivero_id
-        WHERE n.vivero_id = %s AND n.id = %s""",
-        (vivero, nodo),
+        WHERE n.vivero_id = %s AND n.id = %s AND (v.eliminado_en IS NULL OR %s)""",
+        (vivero, nodo, permitir_eliminado),
     ).fetchone()
     if not fila or not any(secrets.compare_digest(huella(auth[7:]), token)
                            for token in (fila["token_sha"], fila["token_instalacion"]) if token):
@@ -152,12 +152,15 @@ async def subir_foto(peticion: Request, vivero: str, nodo: str, camara: str, nom
 @api.get("/{vivero}/{nodo}/config")
 def politica(peticion: Request, vivero: str, nodo: str):
     with conectar(cargar_configuracion()) as conexion:
-        registro = autenticar(conexion, peticion, vivero, nodo)
+        registro = autenticar(conexion, peticion, vivero, nodo, permitir_eliminado=True)
         camaras = conexion.execute(
             """SELECT id, activa, intervalo, desde::text, hasta::text FROM camaras
             WHERE vivero_id = %s AND nodo_id = %s ORDER BY id""",
             (vivero, nodo),
         ).fetchall()
+    if registro['eliminado_en'] is not None:
+        for camara in camaras:
+            camara['activa'] = False
     return {"zona": registro["zona"], "camaras": camaras}
 
 

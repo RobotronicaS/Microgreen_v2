@@ -113,7 +113,7 @@ def resolver_solicitud(peticion: Request, solicitud_id: int, datos: FormData = D
                 sitios = sorted({identificador(v) for v in datos.getlist("viveros")})
                 if not sitios or len(sitios) > 100:
                     raise ValueError("Elegí al menos un invernáculo que esta cuenta pueda visualizar.")
-                existentes = conexion.execute("SELECT id FROM viveros WHERE id = ANY(%s)", (sitios,)).fetchall()
+                existentes = conexion.execute("SELECT id FROM viveros WHERE id = ANY(%s) AND eliminado_en IS NULL", (sitios,)).fetchall()
                 if len(existentes) != len(sitios):
                     raise ValueError("Actualizá la página y elegí invernáculos existentes.")
                 cuenta = conexion.execute(

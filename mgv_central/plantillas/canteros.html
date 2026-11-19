@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block contenido %}
+<a class="back" href="/viveros/{{ sitio.id }}">{{ icon('back') }} {{ sitio.nombre }}</a>
+<div class="page-head"><div><div class="eyebrow">Interior del invernáculo</div><h1>Canteros de {{ sitio.nombre }}</h1><p>Organizá los canteros e indicá qué planta y variedad cultivás en cada uno.</p></div><a class="btn" href="/viveros/{{ sitio.id }}">Ver esquema</a></div>
+{% if guardado in ('distribucion', 'cantero') %}<p class="aviso" role="status">{{ 'Distribución guardada.' if guardado == 'distribucion' else 'Información del cantero guardada.' }}</p>{% endif %}
+<section class="panel canteros-distribucion">
+  <h2>Distribución de canteros</h2>
+  <p>{{ sitio.canteros_filas }} filas × {{ sitio.canteros_columnas }} columnas · <strong>{{ sitio.canteros|length }} canteros</strong></p>
+  {% if usuario.rol == 'tecnico' %}
+  <form method="post" action="/viveros/{{ sitio.id }}/canteros/distribucion" class="form-linea">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Filas de canteros<input type="number" name="filas" value="{{ sitio.canteros_filas }}" min="1" max="20" step="1" required></label>
+    <label>Columnas de canteros<input type="number" name="columnas" value="{{ sitio.canteros_columnas }}" min="1" max="20" step="1" required></label>
+    <button class="btn primary">Guardar distribución</button>
+  </form>
+  <p class="muted">Podés usar de 1 a 20 filas y columnas. Al reducir la distribución, se conserva la información de las posiciones que queden fuera. Volvé a ampliarla para recuperarlas.</p>
+  {% endif %}
+  {% if sitio.canteros_reservados %}<p class="aviso">Hay {{ sitio.canteros_reservados }} canteros con información guardada fuera de la distribución actual.</p>{% endif %}
+</section>
+{% for grupo in sitio.canteros|groupby('fila') %}
+<section class="canteros-fila" aria-label="Fila {{ grupo.grouper }}">
+  <h2>Fila {{ grupo.grouper }}</h2><div class="canteros-grid">
+  {% for c in grupo.list %}
+  <article class="panel cantero-card" id="cantero-{{ c.fila }}-{{ c.columna }}">
+    <div class="eyebrow">Fila {{ c.fila }} · Columna {{ c.columna }}</div><h3>{{ c.etiqueta }}</h3>
+    {% if usuario.rol == 'tecnico' %}
+    <form method="post" action="/viveros/{{ sitio.id }}/canteros/{{ c.fila }}/{{ c.columna }}" class="form-col">
+      <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+      <label>Nombre del cantero<input name="nombre" value="{{ c.nombre }}" maxlength="80" placeholder="Cantero {{ c.fila }}.{{ c.columna }}"></label>
+      <label>Planta o especie<input name="planta" value="{{ c.planta }}" maxlength="120" placeholder="Ej.: lechuga, rúcula, rábano"></label>
+      <label>Variedad<input name="variedad" value="{{ c.variedad }}" maxlength="120" placeholder="Ej.: Crespa verde"></label>
+      <label>Descripción<textarea name="descripcion" maxlength="1000" rows="3" placeholder="Características de la variedad y observaciones del cantero">{{ c.descripcion }}</textarea></label>
+      <button class="btn primary">Guardar cantero {{ c.fila }}.{{ c.columna }}</button>
+    </form>
+    {% else %}
+    <dl class="device-specs"><dt>Planta</dt><dd>{{ c.planta or 'Sin indicar' }}</dd><dt>Variedad</dt><dd>{{ c.variedad or 'Sin indicar' }}</dd></dl>
+    <p class="cantero-descripcion">{{ c.descripcion or 'Sin descripción.' }}</p>
+    {% endif %}
+  </article>
+  {% endfor %}</div>
+</section>
+{% endfor %}
+{% endblock %}

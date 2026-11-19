@@ -21,7 +21,7 @@ rutas = APIRouter()
 def gestion(peticion: Request):
     with conectar(cargar_configuracion()) as conexion:
         usuario = exigir(conexion, peticion, admin=True)
-        sitios = conexion.execute("SELECT * FROM viveros ORDER BY nombre").fetchall()
+        sitios = conexion.execute("SELECT * FROM viveros WHERE eliminado_en IS NULL ORDER BY nombre").fetchall()
         cuentas = conexion.execute("SELECT id, nombre, activo, administrador FROM usuarios ORDER BY nombre").fetchall()
         solicitudes = conexion.execute(
             """SELECT id, nombre, persona, creada_en FROM solicitudes_acceso
@@ -31,7 +31,7 @@ def gestion(peticion: Request):
         permisos = conexion.execute(
             """SELECT p.*, u.nombre AS usuario, v.nombre AS sitio FROM permisos p
             JOIN usuarios u ON u.id = p.usuario_id JOIN viveros v ON v.id = p.vivero_id
-            ORDER BY u.nombre, v.nombre""",
+            WHERE v.eliminado_en IS NULL ORDER BY u.nombre, v.nombre""",
         ).fetchall()
         historial = conexion.execute(
             """SELECT a.*, u.nombre FROM auditoria a LEFT JOIN usuarios u ON u.id = a.usuario_id

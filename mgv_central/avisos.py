@@ -24,7 +24,7 @@ def opciones_avisos():
 
 def incidentes(conexion, config):
     ahora = datetime.now(UTC)
-    sitios = resumen_camaras(conexion, conexion.execute("SELECT * FROM viveros").fetchall(), ahora)
+    sitios = resumen_camaras(conexion, conexion.execute("SELECT * FROM viveros WHERE eliminado_en IS NULL").fetchall(), ahora)
     hallazgos = {}
     for sitio in sitios:
         vivero = sitio["id"]
@@ -49,8 +49,9 @@ def incidentes(conexion, config):
     if not importador or ahora - importador["terminado_en"] > ATRASO_IMPORTADOR or importador["errores"]:
         hallazgos["central:importador"] = (None, "aviso", "Revisá el temporizador o los errores de recepción de Central.")
     for fila in conexion.execute(
-        """SELECT vivero_id, count(*) AS cantidad FROM trabajos WHERE estado = 'error'
-        AND tipo IN ('analisis','ia') GROUP BY vivero_id""",
+        """SELECT t.vivero_id, count(*) AS cantidad FROM trabajos t JOIN viveros v ON v.id = t.vivero_id
+        WHERE t.estado = 'error' AND v.eliminado_en IS NULL
+        AND t.tipo IN ('analisis','ia') GROUP BY t.vivero_id""",
     ):
         hallazgos[f"trabajos:{fila['vivero_id']}"] = (
             fila["vivero_id"], "aviso", f"{fila['cantidad']} análisis requieren revisión.",
@@ -129,7 +130,8 @@ def supervisar(config):
         actualizar_alertas(conexion, config, canales)
         avisos = conexion.execute(
             """SELECT a.detalle, v.* FROM avisos v JOIN alertas a ON a.id = v.alerta_id
-            WHERE v.enviada_en IS NULL AND v.siguiente <= now() AND v.intentos < 5 AND v.canal = ANY(%s)
+            WHERE (a.vivero_id IS NULL OR EXISTS (SELECT 1 FROM viveros s WHERE s.id = a.vivero_id AND s.eliminado_en IS NULL))
+            AND v.enviada_en IS NULL AND v.siguiente <= now() AND v.intentos < 5 AND v.canal = ANY(%s)
             ORDER BY v.siguiente, v.alerta_id LIMIT 4""", (list(canales),),
         ).fetchall()
         for aviso in avisos:
