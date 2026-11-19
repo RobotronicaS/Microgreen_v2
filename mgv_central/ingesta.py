@@ -308,6 +308,7 @@ def importar(config):
         camaras = conexion.execute(
             """SELECT c.vivero_id, c.nodo_id, c.camara_id AS id, n.entrada_legacy FROM camaras_origen c
             JOIN nodos n ON n.vivero_id = c.vivero_id AND n.id = c.nodo_id
+            JOIN viveros v ON v.id = c.vivero_id WHERE v.eliminado_en IS NULL
             ORDER BY c.vivero_id, c.nodo_id, c.camara_id""",
         ).fetchall()
         for fila in camaras:

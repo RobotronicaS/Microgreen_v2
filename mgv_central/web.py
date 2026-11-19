@@ -71,7 +71,7 @@ def fila(conexion, consulta, valores, mensaje):
 
 
 def sitio(conexion, vivero):
-    return fila(conexion, "SELECT * FROM viveros WHERE id = %s", (vivero,), "Invernáculo desconocido.")
+    return fila(conexion, "SELECT * FROM viveros WHERE id = %s AND eliminado_en IS NULL", (vivero,), "Invernáculo desconocido.")
 
 
 def puesto(conexion, vivero, camara):

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block contenido %}
+<a class="back" href="/viveros/{{ sitio.id }}">{{ icon('back') }} Volver a {{ sitio.nombre }}</a>
+<div class="page-head"><div><div class="eyebrow">Administración</div><h1>Eliminar invernáculo</h1></div></div>
+<section class="panel danger-zone">
+  <h2>{{ sitio.nombre }}</h2>
+  <p>Este invernáculo se quitará del listado para todas las personas. Se deshabilitarán sus {{ cantidades.camaras }} cámaras y se cancelarán las solicitudes pendientes de sus {{ cantidades.nodos }} equipos Zero.</p>
+  <p>Las Zero vinculadas recibirán las cámaras pausadas cuando vuelvan a consultar su programación. Central dejará de recibir fotos y lecturas de este invernáculo.</p>
+  <p>Se conservarán las {{ cantidades.fotos }} fotos, el historial, los cultivos y los datos de los canteros como respaldo. La eliminación no borra archivos de los equipos.</p>
+  <form method="post" class="form-col" action="/viveros/{{ sitio.id }}/eliminar">
+    <input type="hidden" name="csrf" value="{{ usuario.csrf }}">
+    <label>Escribí <strong>{{ sitio.nombre }}</strong> para confirmar<input name="confirmacion" maxlength="80" required autocomplete="off" spellcheck="false"></label>
+    <div class="acciones"><a class="btn" href="/viveros/{{ sitio.id }}">Cancelar</a><button class="btn danger">Eliminar invernáculo</button></div>
+  </form>
+</section>
+{% endblock %}

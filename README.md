@@ -1,4 +1,4 @@
-# MicroGreenVision Central 1.1.1
+# MicroGreenVision Central 1.2.0
 
 Sistema instalable para administrar invernáculos, equipos Raspberry Pi Zero y cámaras IP desde una PC. Los dibujos de los invernáculos abren su esquema interior; cada Zero y cámara se puede seleccionar para consultar su estado y abrir su configuración.
 
@@ -36,6 +36,11 @@ Abrí el enlace HTTPS privado de Central que ya utilizás. El servicio escucha e
 4. **Agregar cámara:** seleccionar su Zero, buscar por ONVIF o completar el acceso RTSP. Se prueba una fotografía antes de registrar la cámara.
 5. **Seleccionar la cámara:** abrir fotos e historial, configurar su programación o cambiar su conexión.
 6. **Organizar plano:** arrastrar cámaras y Zero. Las posiciones se guardan en la base de datos.
+7. **Canteros:** elegir las filas y columnas de canteros. Cada posición permite guardar nombre, planta, variedad y descripción. El esquema muestra la distribución y abre la ficha al seleccionar un cantero.
+
+Al reducir la cuadrícula se conserva la información de las posiciones que quedan fuera. Ampliarla permite recuperarlas. Técnicos y administradores pueden editar; las cuentas de consulta ven el cultivo asignado.
+
+Una cuenta administradora puede usar **Eliminar invernáculo**, desde el interior o sus ajustes. El panel pide escribir su nombre antes de quitarlo del listado y pausar sus cámaras. Conserva fotografías, historial y canteros como respaldo; no elimina archivos de las Zero. Los equipos reciben la programación pausada al consultar Central y se bloquean nuevas fotos y lecturas de ese invernáculo. La baja no se revierte desde el panel.
 
 No hay un límite de 10 invernáculos ni de 15 cámaras en el catálogo. El rendimiento efectivo depende de la Raspberry, las cámaras, la frecuencia elegida, la red y el almacenamiento. Conviene distribuir las cámaras entre varios equipos Zero cuando aumenta la carga.
 

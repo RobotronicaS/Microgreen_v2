@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block contenido %}
+{% if request.query_params.get('eliminado') == 'si' %}<p class="aviso" role="status">Invernáculo eliminado del panel. Se conservaron sus fotos y su historial.</p>{% endif %}
 <div class="page-head"><div><div class="eyebrow">Vista general</div><h1>Tus invernáculos, a simple vista.</h1><p>Elegí un invernáculo para explorar sus equipos y cámaras.</p></div>{% if usuario.administrador %}<a class="btn primary" href="/invernaculos/nuevo">{{ icon('plus') }} Agregar invernáculo</a>{% endif %}</div>
 {% set resumen = namespace(zeros=0, cameras=0) %}{% for s in sitios %}{% set resumen.zeros = resumen.zeros + s.nodos|length %}{% set resumen.cameras = resumen.cameras + s.camaras|length %}{% endfor %}
 <section class="stats"><div class="stat"><div class="stat-icon">{{ icon('greenhouse') }}</div><div><strong>{{ cantidad }}</strong><p>Invernáculos disponibles</p></div></div><div class="stat"><div class="stat-icon">{{ icon('board') }}</div><div><strong>{{ resumen.zeros }}</strong><p>Equipos Zero en esta vista</p></div></div><div class="stat"><div class="stat-icon">{{ icon('camera') }}</div><div><strong>{{ resumen.cameras }}</strong><p>Cámaras · {{ totales.aldia }} al día</p></div></div></section>

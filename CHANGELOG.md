@@ -1,5 +1,14 @@
 # Cambios
 
+## 1.2.0 — 19/11/2026
+
+- Canteros por invernáculo: distribución configurable de 1 a 20 filas y columnas, visible en el esquema interior.
+- Nombre, planta o especie, variedad y descripción por cantero; edición para técnicos y administradores, consulta para lectores.
+- Reducir la distribución conserva la información de los canteros que quedan fuera; al ampliarla se recupera por su fila y columna.
+- Opción de eliminar invernáculos para administradores, con confirmación mediante el nombre completo y control de sesión.
+- La baja quita el invernáculo de las vistas, pausa las cámaras, cancela solicitudes pendientes y bloquea recepción. Las Zero conservan acceso a su programación pausada.
+- Se conservan cuentas, fotografías, historial y datos de cultivo. Migración de base de datos compatible con instalaciones anteriores.
+
 ## 1.1.1 — 19/11/2026
 
 - Canal permanente `estable` para instalar y actualizar los servidores desde GitHub.
