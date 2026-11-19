@@ -7,6 +7,7 @@
 - Actualizador con avance sin sobrescritura de commits y control de cambios locales.
 - Registro de versión, commit y fecha de la última instalación verificada.
 - Guía de instalación en otro servidor, acceso al panel y actualizaciones futuras.
+- Preparación de pruebas sin paquetes multimedia que no usa la suite; FFmpeg se conserva en el instalador del servidor.
 
 ## 1.1.0 — 18/11/2026
 

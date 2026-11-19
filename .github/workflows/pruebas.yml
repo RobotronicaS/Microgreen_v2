@@ -8,13 +8,13 @@ permissions:
 jobs:
   pruebas:
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - name: Preparar PostgreSQL y herramientas
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y postgresql rsync ffmpeg python3-venv
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update -qq
+          sudo apt-get -o Acquire::Retries=2 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install --no-install-recommends -y postgresql rsync python3-venv
       - name: Preparar Python
         run: |
           python3 -m venv .venv
