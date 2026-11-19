@@ -1,10 +1,20 @@
-# MicroGreenVision Central 1.1.0
+# MicroGreenVision Central 1.1.1
 
 Sistema instalable para administrar invernáculos, equipos Raspberry Pi Zero y cámaras IP desde una PC. Los dibujos de los invernáculos abren su esquema interior; cada Zero y cámara se puede seleccionar para consultar su estado y abrir su configuración.
 
 ## Instalación o actualización
 
-El servidor Central se instala en la Raspberry Pi 4/5 con Raspberry Pi OS / Debian de 64 bits. La PC Windows abre el panel en su navegador. Las Zero 2 W capturan las fotografías en cada instalación.
+Para instalar en otro servidor y recibir las próximas versiones, usá siempre la rama **`estable`**. [Guía para tu servidor: instalación y actualización desde GitHub](docs/servidor_github.md).
+
+Después de clonar esa rama, las actualizaciones se hacen con el mismo comando, dentro del clon de fuentes y con el usuario original de Central:
+
+```bash
+bash actualizar_central.sh
+```
+
+GitHub publica en `estable` los cambios de `main` que aprobaron las pruebas. El actualizador conserva los datos y ejecuta el instalador con su copia previa.
+
+El servidor Central se instala en un servidor Debian 13 de 64 bits o Raspberry Pi 4/5 con Raspberry Pi OS basado en Debian 13. La PC Windows abre el panel en su navegador. Las Zero 2 W capturan las fotografías en cada instalación.
 
 Si ya usás la versión 0.8.0, ejecutá el instalador con el mismo usuario Linux. Conserva `config.json`, cuentas, fotografías, historial y equipos. Guarda una copia del código, las unidades y la base de datos en `~/MicroGreenVision_Central/.versiones/` antes de actualizar.
 

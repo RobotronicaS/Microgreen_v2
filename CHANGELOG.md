@@ -1,5 +1,13 @@
 # Cambios
 
+## 1.1.1 — 19/11/2026
+
+- Canal permanente `estable` para instalar y actualizar los servidores desde GitHub.
+- Publicación automática en `estable` después de aprobar las pruebas del commit actual de `main`.
+- Actualizador con avance sin sobrescritura de commits y control de cambios locales.
+- Registro de versión, commit y fecha de la última instalación verificada.
+- Guía de instalación en otro servidor, acceso al panel y actualizaciones futuras.
+
 ## 1.1.0 — 18/11/2026
 
 - Conexión opcional a un Pod RunPod mediante HTTPS y clave de análisis.

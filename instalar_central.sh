@@ -101,19 +101,30 @@ import json
 import time
 from urllib.error import URLError
 from urllib.request import urlopen
+from mgv_central import __version__
 
 for _ in range(20):
     try:
         with urlopen("http://127.0.0.1:8766/salud", timeout=2) as respuesta:
-            if json.load(respuesta) == {"estado": "ok", "version": "1.1.0"}:
-                print("Central v1.1.0 responde en 127.0.0.1:8766.")
+            if json.load(respuesta) == {"estado": "ok", "version": __version__}:
+                print(f"Central v{__version__} responde en 127.0.0.1:8766.")
                 break
     except (OSError, URLError, ValueError):
         pass
     time.sleep(1)
 else:
-    raise SystemExit("Central v1.1.0 no respondió en 8766. Revisá microgreen-central-panel.service.")
+    raise SystemExit(f"Central v{__version__} no respondió en 8766. Revisá microgreen-central-panel.service.")
 PY
+# Se escribe únicamente después de verificar que la versión instalada responde.
+revision='fuentes sin metadatos Git'
+if command -v git >/dev/null && git -C "$origen" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    revision="$(git -C "$origen" rev-parse HEAD)"
+fi
+registro="$(mktemp "$destino/.version-instalada.XXXXXX")"
+printf 'Version: %s\nCommit: %s\nInstalado UTC: %s\n' \
+    "$(/usr/bin/python3 -c 'from mgv_central import __version__; print(__version__)')" \
+    "$revision" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$registro"
+mv -- "$registro" "$destino/VERSION_INSTALADA.txt"
 trap - EXIT
 printf 'Copia previa en %s\n' "$reserva"
 systemctl --user list-timers 'microgreen-central-*' --no-pager

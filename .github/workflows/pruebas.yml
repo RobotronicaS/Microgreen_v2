@@ -20,8 +20,37 @@ jobs:
           python3 -m venv .venv
           .venv/bin/python -m pip install -r pruebas/requirements.txt
       - name: Comprobar instaladores
-        run: bash -n instalar_central.sh zero/instalar_zero.sh zero/vincular_remoto.sh
+        run: bash -n instalar_central.sh actualizar_central.sh zero/instalar_zero.sh zero/vincular_remoto.sh
       - name: Ejecutar las pruebas con PostgreSQL aislado
         env:
           PYTHONPATH: .
         run: .venv/bin/python -m pytest -q pruebas
+
+  publicar-estable:
+    needs: pruebas
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    permissions:
+      contents: write
+    concurrency:
+      group: publicar-estable
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Publicar en estable el commit probado de main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main
+          if [[ "$(git rev-parse refs/remotes/origin/main)" != "$GITHUB_SHA" ]]; then
+            echo 'Main avanzó; su nueva ejecución publicará estable cuando pase las pruebas.'
+            exit 0
+          fi
+          if git ls-remote --exit-code --heads origin estable; then
+            git fetch origin estable
+            git merge-base --is-ancestor FETCH_HEAD "$GITHUB_SHA"
+          fi
+          git push origin "$GITHUB_SHA:refs/heads/estable"

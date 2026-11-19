@@ -1,4 +1,4 @@
-> Para la interfaz ilustrada y las opciones de la versión 1.0, empezá por [Instalación y uso de Central 1.0](version_1.md). Los pasos siguientes conservan la documentación de las versiones anteriores.
+> Para instalar o actualizar la versión vigente desde GitHub, empezá por [Instalar y actualizar el servidor](servidor_github.md). Los pasos de ZIP siguientes conservan la documentación de versiones anteriores; la sección de acceso privado sigue siendo aplicable.
 
 # Instalación de Microgreen2 desde cero
 
