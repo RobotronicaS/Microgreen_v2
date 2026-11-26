@@ -1,0 +1,59 @@
+# MicroGreenVision Central con Docker Compose. Guía: docs/docker.md
+#   cp docker/ejemplo.env .env   # y completar POSTGRES_PASSWORD
+#   docker compose up -d --build
+name: microgreen-central
+
+x-central: &central
+  build: .
+  image: microgreen-central:local
+  restart: unless-stopped
+  environment:
+    MGV_CENTRAL_DB_HOST: db
+    MGV_CENTRAL_DB_PUERTO: "5432"
+    MGV_CENTRAL_DB_NOMBRE: microgreen_central
+    MGV_CENTRAL_DB_USUARIO: microgreen_central
+    MGV_CENTRAL_DB_CLAVE: ${POSTGRES_PASSWORD:?Definí POSTGRES_PASSWORD en .env}
+    TZ: ${TZ:-America/Montevideo}
+  volumes:
+    - datos:/app/datos
+
+services:
+  db:
+    image: postgres:17-trixie
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: microgreen_central
+      POSTGRES_USER: microgreen_central
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Definí POSTGRES_PASSWORD en .env}
+      TZ: ${TZ:-America/Montevideo}
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U microgreen_central -d microgreen_central"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # Sin puertos publicados: solo la ven el panel y las tareas por la red interna de Compose.
+
+  panel:
+    <<: *central
+    command: ["panel"]
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Solo en localhost del host: el acceso público es por nginx (TLS) o Tailscale Serve.
+      - "127.0.0.1:${PUERTO_PANEL:-8766}:8766"
+
+  tareas:
+    <<: *central
+    command: ["tareas"]
+    healthcheck:
+      disable: true
+    depends_on:
+      panel:
+        condition: service_healthy
+
+volumes:
+  datos:
+  postgres:

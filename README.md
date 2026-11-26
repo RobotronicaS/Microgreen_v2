@@ -75,6 +75,7 @@ Los nuevos registros se aprueban desde **Configuración → Administración**. [
 - [Conexiones y preparación de los equipos](docs/instalacion.md).
 - [Operación, avisos y respaldos](docs/operacion.md).
 - [Guía del docente](docs/docente.md).
+- [Instalar con Docker Compose](docs/docker.md).
 - [Cambios de versión](CHANGELOG.md).
 
 ## Comprobación del software
