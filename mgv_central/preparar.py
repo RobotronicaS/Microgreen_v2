@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import secrets
 import subprocess
@@ -14,12 +15,16 @@ def crear_configuracion():
     ruta = ruta_configuracion()
     if not ruta.exists():
         contenido = {
+            # Las variables MGV_CENTRAL_DB_* y MGV_CENTRAL_ARCHIVO solo se usan al crear config.json
+            # (por ejemplo, desde Docker Compose). Después manda el archivo.
             "base_datos": {
-                "host": "127.0.0.1", "puerto": 5432,
-                "nombre": "microgreen_central", "usuario": "microgreen_central",
-                "clave": secrets.token_urlsafe(36),
+                "host": os.getenv("MGV_CENTRAL_DB_HOST", "127.0.0.1"),
+                "puerto": int(os.getenv("MGV_CENTRAL_DB_PUERTO", "5432")),
+                "nombre": os.getenv("MGV_CENTRAL_DB_NOMBRE", "microgreen_central"),
+                "usuario": os.getenv("MGV_CENTRAL_DB_USUARIO", "microgreen_central"),
+                "clave": os.getenv("MGV_CENTRAL_DB_CLAVE") or secrets.token_urlsafe(36),
             },
-            "archivo": str(RAIZ / "datos" / "archivo"),
+            "archivo": os.getenv("MGV_CENTRAL_ARCHIVO", str(RAIZ / "datos" / "archivo")),
             "zona_horaria": "America/Montevideo",
             "viveros": [
                 {
@@ -61,7 +66,17 @@ def administrar(config, instruccion):
 def preparar_postgres(config):
     db = config.base_datos
     if db.host not in ("127.0.0.1", "localhost"):
-        raise ValueError("Para preparar la base, configurá el PostgreSQL local del servidor Central.")
+        # Base administrada fuera de este equipo (por ejemplo, el contenedor de Docker Compose):
+        # la cuenta y la base ya existen; solo se comprueba el acceso.
+        try:
+            with conectar(config):
+                pass
+        except Error as error:
+            raise ValueError(
+                f"No se pudo conectar a PostgreSQL en {db.host}:{db.puerto}. "
+                "Revisá que la base exista y las credenciales de config.json."
+            ) from error
+        return
 
     nombre, usuario = sql.Literal(db.nombre), sql.Literal(db.usuario)
     propietario = administrar(

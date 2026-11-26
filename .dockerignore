@@ -1,0 +1,18 @@
+# Solo entra lo que copia el Dockerfile; nunca configuración ni datos de una instalación.
+.git
+.github
+.venv
+venv
+**/__pycache__
+*.py[cod]
+.pytest_cache
+pruebas
+docs
+systemd
+datos
+.env
+.env.*
+/config.json
+/avisos.json
+/respaldo.json
+/runpod.json
